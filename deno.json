@@ -1,5 +1,11 @@
 {
   "tasks": {
-    "dev": "deno run --watch --allow-net main.ts"
+    "dev": "deno run --watch --allow-net main.ts",
+    "node1": "deno run --watch --allow-net main.ts --port 5801",
+    "node2": "deno run --watch --allow-net main.ts --port 5802 --join http://localhost:5801",
+    "node3": "deno run --watch --allow-net main.ts --port 5803 --join http://localhost:5801 --join http://localhost:5802"
+  },
+  "imports": {
+    "@oak/oak": "jsr:@oak/oak@^17.1.1"
   }
 }

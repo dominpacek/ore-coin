@@ -5,15 +5,16 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 
 ### 1. Sieć peer-to-peer i bezpieczny portfel (termin oddania: 25.10.2024)
 - [x] Założenie repo
-- [ ] **Uruchomienie i rejestracja węzła**
-    - [ ] Podłączenie do sieci
-    - [ ] Rozgłaszanie wiadomości
-- [ ] **Tworzenie tożsamości cyfrowej**
+- [ ] **Węzły**
+    - [x] Uruchomienie sieci  
+    - [x] Podłączenie do sieci
+    - [ ] Aktualizowanie listy peerów
+    - [x] Rozgłaszanie wiadomości
+- [ ] **Tożsamości cyfrowe**
     - [ ] Generowanie par kluczy
-    - [ ] Zabezpieczenie klucza sekretnego (zaszyfrowanie hasłem?)
-- [ ] **Przechowywanie kluczy w cyfrowym portfelu**
-    - [ ] Zbiór par kluczy
-    - [ ] Jest klientem węzła
+- [ ] **Cyfrowy portfel**
+    - [ ] Przechowywanie kluczy
+    - [ ] Zabezpieczenie klucza sekretnego
 - [ ] Funkcje
     - [ ] init (utworzenie węzła 0)
     - [ ] join (podłączenie do istniejącego węzła)

@@ -1,12 +1,11 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { Node } from "./node.ts";
 import { Message } from "./message.ts";
-import * as emoji from "npm:node-emoji";
 
 let node: Node;
 // Entry point of the program
 if (import.meta.main) {
-  console.log(emoji.emojify(`Witaj w Górniczej Dolinie! :pick:`));
+  console.log(`%cWitaj w Górniczej Dolinie! ⛏`, "color: blue");
 
   const flags = parseArgs(Deno.args, {
     boolean: ["init"],
@@ -32,14 +31,14 @@ if (import.meta.main) {
   }
   node = new Node(host, port);
   flags.join.forEach((peer) => {
-    node.addPeer(peer);
+    node.addPeer(peer, true);
   });
   if (node.peers && node.peers.length > 0) {
     node.sayHi(node.peers[node.peers.length - 1]);
   }
 
-  // console.log(`Enter message or "exit" to quit.`)
-  // readInput().catch((err) => console.error(err));
+  console.log(`%cEnter message or "exit" to quit.`, "color: gray");
+  readInput().catch((err) => console.error(err));
 }
 
 // Read user input wihtout blocking the event loop
@@ -56,6 +55,8 @@ async function readInput() {
     if (input.toLowerCase() === "exit") {
       console.log("Exiting...");
       Deno.exit(0);
+    } else if (input.toLowerCase() === "peers") {
+      console.log(`Peers: ${node.peers.join(", ")}`);
     } else {
       await node.broadcast(new Message(input));
     }

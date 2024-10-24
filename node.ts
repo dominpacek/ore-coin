@@ -1,41 +1,37 @@
 import { Application } from "jsr:@oak/oak/application";
 import { Router } from "jsr:@oak/oak/router";
 import { Message } from "./message.ts";
-import * as emoji from "npm:node-emoji";
 
 export class Node {
     address: string;
     port: number;
-    peers: string[] = [];
 
-    received_messages: string[] = [];
+    peers: string[] = []; // list of peer URLs
+
+    known_messages: string[] = []; // remember received messages
 
     constructor(address: string, port: number) {
         this.address = address;
         this.port = port;
 
         this.runServer();
-        console.log(emoji.emojify(`:gem: Nasłuchuję na ${this.getUrl()}`));
+        console.log(`💎 Listening on ${this.getUrl()}`);
     }
 
     getUrl() {
         return `http://${this.address}:${this.port}`;
     }
 
-    public addPeer(url: string) {
-        this.peers.push(url);
-        // TODO endpoint add_peer u celu żeby on też mógł sobie dodać nowego peera 
-    }
-
+    // Sends a test message to a target URL
     public sayHi(url: string) {
-        this.send(new Message(`Hi from ${this.getUrl()}!`), url);
+        const message = new Message(`Hi from ${this.getUrl()}!`);
+        console.log(`➡️: Sending message "${message.token}" to ${url}`);
+        this.known_messages.push(message.token);
+        this.send(message, url);
     }
 
+    // Sends a message to a target URL
     async send(message: Message, target_url: string) {
-        console.log(
-            emoji.emojify(`➡️: Sending message "${message.token}" to ${target_url}`),
-        );
-
         const req = new Request(target_url + "/node/add_message", {
             method: "POST",
             headers: {
@@ -47,11 +43,34 @@ export class Node {
         // console.log("response: ", resp);
     }
 
+    // Broadcasts a message to all known peers
     async broadcast(message: Message) {
-        console.log(`Broadcasting ${message.token} to ${this.peers.length} peers.`);
+        this.known_messages.push(message.token);
+        console.log(
+            `➡️: Broadcasting ${message.token} to ${this.peers.length} peers.`,
+        );
         await Promise.all(this.peers.map(async (peer) => {
             await this.send(message, peer); // Run all `send` calls concurrently
         }));
+    }
+
+    public addPeer(url: string, greet?: boolean) {
+        this.peers.push(url);
+        if (greet) {
+            this.greetPeer(url);
+        }
+    }
+
+    // Ask peer to add us to their list of peers
+    async greetPeer(peer: string) {
+        const req = new Request(peer + "/node/add_peer", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ address: this.getUrl() }),
+        });
+        const resp = await fetch(req);
     }
 
     async runServer() {
@@ -61,9 +80,39 @@ export class Node {
                 context.response.body = "Hello world!";
             })
             .get("/node", (context) => {
-                context.response.body = `Dzień dobry od node ${
-                    this.getUrl()
-                }`;
+                context.response.body = `Dzień dobry od node ${this.getUrl()}`;
+            })
+            .post("/node/add_peer", async (context) => {
+                try {
+                    const body = context.request.body;
+                    if (body.type() === "json") {
+                        const req = await body.json();
+                        const peer_address = req.address as string;
+                        // console.log("Json content", x);
+                        if (!this.peers.includes(peer_address)) {
+                            console.log(
+                                `📳 %cAdding new peer at ${peer_address}.`,
+                                "color: orange",
+                            );
+                            this.addPeer(peer_address);
+                        } else {
+                            console.log(
+                                `📳 Already have peer ${peer_address}.`,
+                            );
+                        }
+                    } else {
+                        context.response.status = 400;
+                        context.response.body = {
+                            message: "Unsupported content type",
+                        };
+                    }
+                } catch (error) {
+                    console.error("Error handling request:", error);
+                    context.response.status = 500;
+                    context.response.body = {
+                        message: "Internal Server Error",
+                    };
+                }
             })
             .post("/node/add_message", async (context) => {
                 try {
@@ -71,19 +120,18 @@ export class Node {
                     if (body.type() === "json") {
                         const req = await body.json();
                         const mess = req as Message;
-                        // TODO convert req to message
                         context.response.status = 200;
                         context.response.body = { message: "response!" };
                         // console.log("Json content", x);
-                        if (!this.received_messages.includes(mess.token)) {
+                        if (!this.known_messages.includes(mess.token)) {
                             console.log(`📥 Received new message`, mess);
-                            this.received_messages.push(mess.token);
-                            console.log(
-                                `Rebroadcasting to ${this.peers.length} peers.`,
-                            );
                             this.broadcast(mess);
                         } else {
-                            console.log(`📥 Received message ${mess.token} again`);
+                            // Message was already received, don't broadcast
+                            console.log(
+                                `📥 %cReceived message ${mess.token} again. No rebroadcast.`,
+                                "color: gray",
+                            );
                         }
                     } else {
                         context.response.status = 400;
@@ -118,4 +166,11 @@ export class Node {
     //         console.log(`got response ${event.data}`);
     //     });
     // }
+}
+
+if (import.meta.main) {
+    const node1 = new Node("localhost", 5811);
+    const node2 = new Node("localhost", 5812);
+
+    console.log(node1 == node2);
 }

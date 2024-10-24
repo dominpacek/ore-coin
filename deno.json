@@ -1,5 +1,11 @@
 {
   "tasks": {
     "dev": "deno run --watch --allow-net main.ts"
+  },
+  "imports": {
+    "@types/elliptic": "npm:@types/elliptic@^6.4.18",
+    "crypto": "npm:crypto@^1.0.1",
+    "elliptic": "npm:elliptic@^6.5.7",
+    "lodash": "npm:lodash@^4.17.21"
   }
 }

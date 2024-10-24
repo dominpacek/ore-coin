@@ -1,8 +1,12 @@
 {
   "tasks": {
-    "dev": "deno run --watch --allow-net main.ts"
+    "dev": "deno run --watch --allow-net main.ts",
+    "node1": "deno run --watch --allow-net main.ts --port 5801",
+    "node2": "deno run --watch --allow-net main.ts --port 5802 --join http://localhost:5801",
+    "node3": "deno run --watch --allow-net main.ts --port 5803 --join http://localhost:5802"
   },
   "imports": {
+    "@oak/oak": "jsr:@oak/oak@^17.1.1",
     "@types/elliptic": "npm:@types/elliptic@^6.4.18",
     "crypto": "npm:crypto@^1.0.1",
     "elliptic": "npm:elliptic@^6.5.7",

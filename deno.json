@@ -6,6 +6,10 @@
     "node3": "deno run --watch --allow-net main.ts --port 5803 --join http://localhost:5802"
   },
   "imports": {
-    "@oak/oak": "jsr:@oak/oak@^17.1.1"
+    "@oak/oak": "jsr:@oak/oak@^17.1.1",
+    "@types/elliptic": "npm:@types/elliptic@^6.4.18",
+    "crypto": "npm:crypto@^1.0.1",
+    "elliptic": "npm:elliptic@^6.5.7",
+    "lodash": "npm:lodash@^4.17.21"
   }
 }

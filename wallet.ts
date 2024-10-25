@@ -1,4 +1,4 @@
-import elliptic from "npm:elliptic";
+import { Buffer } from "node:buffer";
 import {
   createCipheriv,
   createDecipheriv,
@@ -6,8 +6,7 @@ import {
   scryptSync,
 } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import * as _ from "lodash";
-import { Buffer } from "node:buffer";
+import elliptic from "npm:elliptic";
 
 const EC = new elliptic.ec("secp256k1");
 
@@ -35,12 +34,12 @@ class Wallet {
     const key = EC.keyFromPrivate(private_key, "hex");
     return key.getPublic().encode("hex");
   }
-  
+
   saveWallet() {
     encryptAndSave(this.keys, this.password, this.fileLocation);
   }
 
-  static createWallet(filePath:string, password: string): Wallet {
+  static createWallet(filePath: string, password: string): Wallet {
     if (existsSync(filePath)) {
       //throw new Error("Wallet already exists");
     }
@@ -52,7 +51,7 @@ class Wallet {
     return wallet;
   }
 
-  static openWallet(filePath:string, password:string): Wallet {
+  static openWallet(filePath: string, password: string): Wallet {
     const wallet = new Wallet(password, filePath);
     wallet.keys = readWallet(filePath, password);
     return wallet;
@@ -64,7 +63,6 @@ const generatePrivateKey = (): string => {
   const privateKey = keyPair.getPrivate();
   return privateKey.toString(16);
 };
-
 
 // deno-lint-ignore no-explicit-any
 function encryptAndSave(data: any, password: string, filePath: string) {
@@ -81,8 +79,6 @@ function encryptAndSave(data: any, password: string, filePath: string) {
     content: encrypted,
   };
   writeFileSync(filePath, JSON.stringify(fileData));
-
-
 }
 
 function readWallet(filePath: string = "private_key", password: string) {
@@ -103,3 +99,4 @@ function readWallet(filePath: string = "private_key", password: string) {
 }
 
 export { Wallet };
+

@@ -1,14 +1,12 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
-import { Node } from "./node.ts";
-import { Message } from "./message.ts";
-import { Wallet } from "./wallet.ts";
 import { exit } from "node:process";
+import { Message } from "./message.ts";
+import { Node } from "./node.ts";
+import { Wallet } from "./wallet.ts";
 
 let node: Node;
 // Entry point of the program
 if (import.meta.main) {
-
-
   console.log(`%cWitaj w Górniczej Dolinie! ⛏`, "color: blue");
 
   const flags = parseArgs(Deno.args, {
@@ -27,31 +25,36 @@ if (import.meta.main) {
 
   //console.log(flags);
 
-  if(flags.wallet){
-
-    let wallet:Wallet;
-    while(true){
+  if (flags.wallet) {
+    let wallet: Wallet;
+    while (true) {
       console.log("\n@@ Zarządzanie portfelem @@");
       console.log("1: Utwórz nowy portfel");
       console.log("2: Otwórz istniejący portfel");
       const choice = prompt("Wybierz opcję: ");
-      if(choice == "1"){
-        const filename:string = prompt("Podaj nazwę pliku [\"wallet.json\"]: ", "wallet.json") ?? "wallet.json";
-        const password:string = prompt("Podaj hasło do portfela: ") ?? "";
+      if (choice == "1") {
+        const filename: string =
+          prompt('Podaj nazwę pliku ["wallet.json"]: ', "wallet.json") ??
+            "wallet.json";
+        const password: string = prompt("Podaj hasło do portfela: ") ?? "";
 
         wallet = Wallet.createWallet(filename, password);
-        console.log("Utworzono portfel.\n")
+        console.log("Utworzono portfel.\n");
         break;
-      }
-      else if(choice == "2"){
-        const filename:string = prompt("Podaj nazwę pliku [\"wallet.json\"]: ", "wallet.json") ?? "wallet.json";
-        const password:string = prompt("Podaj hasło do portfela: ") ?? "";
-        try{
+      } else if (choice == "2") {
+        const filename: string =
+          prompt('Podaj nazwę pliku ["wallet.json"]: ', "wallet.json") ??
+            "wallet.json";
+        const password: string = prompt("Podaj hasło do portfela: ") ?? "";
+        try {
           wallet = Wallet.openWallet(filename, password);
           console.log("Portfel został poprawnie otwarty.");
-        }
-        catch(e) {
-          console.log("ERROR: ", e.message);
+        } catch (e) {
+          if (e instanceof Error) {
+            console.log("ERROR: ", e.message);
+          } else {
+            console.log("ERROR: ", e);
+          }
           continue;
         }
         break;
@@ -62,23 +65,26 @@ if (import.meta.main) {
     console.log("2: Dodaj nowy, losowy klucz");
     console.log("3: Zapisz i wyjdź");
 
-    while(true){
-      let choice = prompt("\nWybierz opcję");
+    while (true) {
+      const choice = prompt("\nWybierz opcję");
 
-      if(choice == "1"){
-        wallet.keys.forEach(key => {
-          console.log("Private: ", key, "\nPublic: ", wallet.getPublicKey(key), "\n\n")
+      if (choice == "1") {
+        wallet.keys.forEach((key) => {
+          console.log(
+            "Private: ",
+            key,
+            "\nPublic: ",
+            wallet.getPublicKey(key),
+            "\n\n",
+          );
         });
-      }
-      else if(choice == "2"){
+      } else if (choice == "2") {
         wallet.addPrivateKey();
-      }
-      else if(choice == "3"){
+      } else if (choice == "3") {
         wallet.saveWallet();
         exit();
       }
     }
-
   }
 
   const host: string = flags.host;

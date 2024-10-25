@@ -39,7 +39,7 @@ export class Node {
             },
             body: JSON.stringify(message),
         });
-        const resp = await fetch(req);
+        const _resp = await fetch(req);
         // console.log("response: ", resp);
     }
 
@@ -70,7 +70,7 @@ export class Node {
             },
             body: JSON.stringify({ address: this.getUrl() }),
         });
-        const resp = await fetch(req);
+        const _resp = await fetch(req);
     }
 
     async runServer() {

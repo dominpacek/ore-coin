@@ -2,8 +2,8 @@
 // Later will be split to Block and Transaction
 
 export class Message {
-    public token: string; 
-    public content: string; 
+    public token: string;
+    public content: string;
 
     constructor(content: string, token?: string) {
         this.content = content;

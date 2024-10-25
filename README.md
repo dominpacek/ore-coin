@@ -10,17 +10,17 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
     - [x] Podłączenie do sieci
     - [x] Aktualizowanie listy peerów
     - [x] Rozgłaszanie wiadomości
-- [ ] **Tożsamości cyfrowe**
-    - [ ] Generowanie par kluczy
-- [ ] **Cyfrowy portfel**
-    - [ ] Przechowywanie kluczy
-    - [ ] Zabezpieczenie klucza sekretnego
-- [x] Funkcje
+- [x] **Tożsamości cyfrowe**
+    - [x] Generowanie par kluczy
+- [x] **Cyfrowy portfel**
+    - [x] Przechowywanie kluczy
+    - [x] Zabezpieczenie klucza sekretnego
+- [x] Funkcjonalności
     - [x] init (utworzenie węzła 0)
     - [x] join (podłączenie do istniejącego węzła)
-    - [x] broadcast
-    - [ ] create_id
-    - [ ] store_id (secure)
+    - [x] broadcast (rozsyłanie wiadomości)
+    - [x] create_id (generacja pary kluczy)
+    - [x] save_id_secure (zapisanie kluczy w portfelu zabezpieczonym hasłem)
 
 Program może działać na 1 komputerze, wystarczy, że węzły będą słuchały na różnych portach.  
 Przewidzieć ewentualność wypadnięcia 1 z węzłów z sieci.  

@@ -28,7 +28,7 @@ Przewidzieć ewentualność wypadnięcia 1 z węzłów z sieci.
 ### 2. Prosty łańcuch bloków (termin oddania: 22.11.2024)
 
 - Tworzenie bloków
-- Jeden górnik
+- Jeden górnik  
 - Ustalenie protokołu wymiany danych
 
 ### 3. Transakcje przekazania środków (termin oddania: 13.12.2024)
@@ -43,3 +43,61 @@ Przewidzieć ewentualność wypadnięcia 1 z węzłów z sieci.
 - Tworzenie forków przez złośliwego node
 
 ### 5. Sprawozdanie końcowe (termin oddania: 24.01.2025)
+
+
+## Blockchain
+Klasa przedstawiająca Blockchain.
+### Konstruktor
+`constructor(genesisBlock: Block | undefined, difficulty: number = 4, reward: number = 10)`
+- genesisBlock - pierwszy blok
+- difficulty - poziom trudności kopania bloku (ile musi być zer w haszu)
+- reward - ile OreConiów otrzymuje kopacz za wykopanie bloku
+
+### Właściwości
+`blocks: Block[]`
+Wszystkie bloki blockchain'u
+
+### Metoda **mineBlock**
+`mineBlock()`
+Rozpoczęcie operacji kopania kolejnego bloku w blockchainie.
+
+### Metoda **saveBlockChain**
+`saveBlockChain(path:string)`
+Zapis blockchain'u w postaci JSON do pliku.
+- path - ścieżka do pliku
+
+### Metoda **fromJson**
+`static fromJson(json: string): Blockchain`
+Odczyt blockchain'u z pliku.
+- path - ścieżka do odczytywanego pliku
+Zwraca:
+- Blockchain
+
+## Block
+### Konstruktor
+`constructor(timestamp: number, transactions: Transaction[], previousHash = '', index = 0)`
+- timestamp
+- transactions
+- index - numer kolejnego bloku (w blockchainie)
+
+### Właściwości
+`index: number` - numer kolejnego bloku (w blockchainie)
+
+`previousHash: string` - hash poprzedniego bloku
+
+`timestamp: number`
+
+`transactions: Transaction[]`
+
+`nonce: number`
+
+`hash: string`
+
+### Metoda toHash
+`toHash()`
+Zwraca hasz SHA256 wartości: index, previousHash, transactions, nonce, hash
+
+### Metoda mine
+`mine(difficulty: number)`
+Kopanie bloku. Szukanie takiej wartości nonce, by hasz (`toHash()`) bloku rozpoczynał się określoną ilością zer.
+- difficulty - liczba, ile zer szukamy

@@ -1,6 +1,6 @@
 import { Application } from "jsr:@oak/oak/application";
 import { Router } from "jsr:@oak/oak/router";
-import { Message } from "./message.ts";
+import { GenericMessage } from "./genericMessage.ts";
 
 export class Node {
     address: string;
@@ -24,14 +24,26 @@ export class Node {
 
     // Sends a test message to a target URL
     public sayHi(url: string) {
-        const message = new Message(`Hi from ${this.getUrl()}!`);
+        const message = new GenericMessage(`Hi from ${this.getUrl()}!`);
         console.log(`➡️: Sending message "${message.token}" to ${url}`);
         this.known_messages.push(message.token);
         this.send(message, url);
     }
 
-    // Sends a message to a target URL
-    async send(message: Message, target_url: string) {
+
+    // Broadcasts a message to all known peers
+    async broadcast(message: GenericMessage) {
+        this.known_messages.push(message.token);
+        console.log(
+            `➡️: Broadcasting ${message.token} to ${this.peers.length} peers.`,
+        );
+        await Promise.all(this.peers.map(async (peer) => {
+            await this.send(message, peer); // Run all `send` calls concurrently
+        }));
+    }
+
+    // Sends a message to a target URL, used by broadcast()
+    async send(message: GenericMessage, target_url: string) {
         const req = new Request(target_url + "/node/add_message", {
             method: "POST",
             headers: {
@@ -43,16 +55,6 @@ export class Node {
         // console.log("response: ", resp);
     }
 
-    // Broadcasts a message to all known peers
-    async broadcast(message: Message) {
-        this.known_messages.push(message.token);
-        console.log(
-            `➡️: Broadcasting ${message.token} to ${this.peers.length} peers.`,
-        );
-        await Promise.all(this.peers.map(async (peer) => {
-            await this.send(message, peer); // Run all `send` calls concurrently
-        }));
-    }
 
     public addPeer(url: string, greet?: boolean) {
         this.peers.push(url);

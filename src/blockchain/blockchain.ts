@@ -1,9 +1,9 @@
-import { Block } from './block.ts';
+import { Block } from '../blockchain/block.ts';
 
 class Blockchain{
-    blocks: Block[] = [];
     difficulty: number = 4;
     reward: number = 10;
+    blocks: Block[] = [];
 
     constructor(genesisBlock: Block | undefined, difficulty: number = 4, reward: number = 10){
         this.blocks = [genesisBlock ?? this.startGenesisBlock()];

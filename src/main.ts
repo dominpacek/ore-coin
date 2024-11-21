@@ -1,9 +1,9 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { exit } from "node:process";
-import { Message } from "./message.ts";
-import { Node } from "./node.ts";
-import { Wallet } from "./wallet.ts";
-import { Blockchain } from "./blockchain.ts";
+import { Blockchain } from "./blockchain/blockchain.ts";
+import { GenericMessage } from "./node/genericMessage.ts";
+import { Wallet } from "./wallet/wallet.ts";
+import { Node } from "./node/node.ts";
 
 let node: Node;
 // Entry point of the program
@@ -129,18 +129,16 @@ if (import.meta.main) {
 
   let blockchain = null;
 
-  if(flags.init){
+  if (flags.init) {
     blockchain = new Blockchain(undefined, 5, 10);
     blockchain.saveBlockChain(blockchainPath);
-  }else{
-     blockchain = Blockchain.fromJson(Deno.readTextFileSync(blockchainPath));
+  } else {
+    blockchain = Blockchain.fromJson(Deno.readTextFileSync(blockchainPath));
   }
-  
+
   blockchain.mineBlock();
   blockchain.saveBlockChain(blockchainPath);
-  
-  
-  
+
   //console.log(`%cEnter message or "exit" to quit.`, "color: gray");
   //readInput().catch((err) => console.error(err));
 }
@@ -162,7 +160,7 @@ async function readInput() {
     } else if (input.toLowerCase() === "peers") {
       console.log(`Peers: ${node.peers.join(", ")}`);
     } else {
-      await node.broadcast(new Message(input));
+      await node.broadcast(new GenericMessage(input));
     }
   }
 }

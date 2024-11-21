@@ -1,7 +1,7 @@
 // Temporary stand-in class
 // Later will be split to Block and Transaction
 
-export class Message {
+export class GenericMessage {
     public token: string;
     public content: string;
 

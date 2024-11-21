@@ -12,6 +12,13 @@ class Transaction {
             outputs: []
         }
     }
+
+    static fromJson(transaction: any) {
+        const newTransaction = new Transaction();
+        newTransaction.type = transaction.type;
+        newTransaction.data = transaction.data;
+        return newTransaction;
+      }
 }
 
 export {Transaction}

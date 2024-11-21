@@ -40,7 +40,7 @@ class Block {
         this.hash = this.toHash();
     }
 
-    toHash() {
+    toHash() : string{
         return createHash('sha256')
             .update(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce)
             .digest('hex');
@@ -54,6 +54,11 @@ class Block {
           this.hash = this.toHash()
         }
         console.log('Mining finished! Nonce: ' + this.nonce + ' Hash: ' + this.hash)
+      }
+
+      static fromJson(block: any) {
+        const transactions = block.transactions.map((transaction: any) => Transaction.fromJson(transaction));
+        return new Block(block.timestamp, [], block.previousHash, block.index);
       }
 
 }

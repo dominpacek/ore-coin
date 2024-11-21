@@ -45,15 +45,17 @@ class Wallet {
     }
     const wallet = new Wallet(password, filePath);
     wallet.addPrivateKey();
-    encryptAndSave(wallet.keys, password, filePath);
+    encryptAndSave(wallet.keys, password, wallet.fileLocation);
 
     console.log("Wallet data saved and encrypted");
     return wallet;
   }
 
   static openWallet(filePath: string, password: string): Wallet {
+    filePath = './user-files/'+filePath;
     const wallet = new Wallet(password, filePath);
     wallet.keys = readWallet(filePath, password);
+    wallet.fileLocation = filePath;
     return wallet;
   }
 }
@@ -81,7 +83,7 @@ function encryptAndSave(data: any, password: string, filePath: string) {
   writeFileSync(filePath, JSON.stringify(fileData));
 }
 
-function readWallet(filePath: string = "private_key", password: string) {
+function readWallet(filePath: string = "wallet.json", password: string) {
   try {
     const fileData = JSON.parse(readFileSync(filePath, "utf8"));
     const salt = Buffer.from(fileData.salt, "hex"); // Extract salt from file

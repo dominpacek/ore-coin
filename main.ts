@@ -3,10 +3,23 @@ import { exit } from "node:process";
 import { Message } from "./message.ts";
 import { Node } from "./node.ts";
 import { Wallet } from "./wallet.ts";
+import { Blockchain } from "./blockchain.ts";
 
 let node: Node;
 // Entry point of the program
 if (import.meta.main) {
+  // create directory for user files
+  try {
+    Deno.mkdirSync("user-files");
+  } catch (e) {
+    if (e instanceof Deno.errors.AlreadyExists) {
+      // pass
+    } else {
+      console.error(e);
+      Deno.exit(1);
+    }
+  }
+
   console.log(`%cWitaj w Górniczej Dolinie! ⛏`, "color: blue");
 
   const flags = parseArgs(Deno.args, {
@@ -101,8 +114,21 @@ if (import.meta.main) {
     node.sayHi(node.peers[node.peers.length - 1]);
   }
 
-  console.log(`%cEnter message or "exit" to quit.`, "color: gray");
-  readInput().catch((err) => console.error(err));
+  let blockchain = null;
+
+  if(flags.init){
+    blockchain = new Blockchain(undefined, 5, 10);
+    blockchain.saveBlockChain();
+  }else{
+     blockchain = Blockchain.fromJson(Deno.readTextFileSync('user-files/blockchain.json'));
+  }
+  
+  blockchain.mineBlock();
+  
+  
+  
+  //console.log(`%cEnter message or "exit" to quit.`, "color: gray");
+  //readInput().catch((err) => console.error(err));
 }
 
 // Read user input wihtout blocking the event loop

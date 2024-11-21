@@ -15,9 +15,9 @@ class Wallet {
   fileLocation: string;
   password: string;
 
-  constructor(password: string, filePath: string) {
+  constructor(password: string, fileName: string) {
     this.keys = [];
-    this.fileLocation = filePath;
+    this.fileLocation = './user-files/'+fileName;
     this.password = password;
   }
 

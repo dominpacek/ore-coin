@@ -106,6 +106,19 @@ if (import.meta.main) {
     console.error(`Invalid port value ${flags.port}`);
     Deno.exit(1);
   }
+
+  try {
+    Deno.mkdirSync(`user-files/${port}`);
+  } catch (e) {
+    if (e instanceof Deno.errors.AlreadyExists) {
+      // pass
+    } else {
+      console.error(e);
+      Deno.exit(1);
+    }
+  }
+  const blockchainPath = `user-files/${port}/blockchain.json`;
+
   node = new Node(host, port);
   flags.join.forEach((peer) => {
     node.addPeer(peer, true);
@@ -118,12 +131,13 @@ if (import.meta.main) {
 
   if(flags.init){
     blockchain = new Blockchain(undefined, 5, 10);
-    blockchain.saveBlockChain();
+    blockchain.saveBlockChain(blockchainPath);
   }else{
-     blockchain = Blockchain.fromJson(Deno.readTextFileSync('user-files/blockchain.json'));
+     blockchain = Blockchain.fromJson(Deno.readTextFileSync(blockchainPath));
   }
   
   blockchain.mineBlock();
+  blockchain.saveBlockChain(blockchainPath);
   
   
   

@@ -25,12 +25,11 @@ class Blockchain{
         const newBlock = new Block(Date.now(), [], this.getLatestBlock().hash, this.getLatestBlock().index + 1);
         newBlock.mine(this.difficulty);
         this.blocks.push(newBlock);
-        this.saveBlockChain();
     }
 
-    saveBlockChain(): void{
+    saveBlockChain(path:string): void{
         // save whole object to file
-        Deno.writeTextFileSync('user-files/blockchain.json', JSON.stringify(this));
+        Deno.writeTextFileSync(path, JSON.stringify(this));
         console.log('Blockchain saved');
     }
 

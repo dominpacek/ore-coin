@@ -40,9 +40,9 @@ class Wallet {
   }
 
   static createWallet(filePath: string, password: string): Wallet {
-    if (existsSync(filePath)) {
-      //throw new Error("Wallet already exists");
-    }
+    // if (existsSync(filePath)) {  // tu jest błąd bo filePath to tak naprawdę nazwa pliku a nie ścieżka i sprawdza w złym miejscu
+    //throw new Error("Wallet already exists");
+    // }
     const wallet = new Wallet(password, filePath);
     wallet.addPrivateKey();
     encryptAndSave(wallet.keys, password, wallet.fileLocation);

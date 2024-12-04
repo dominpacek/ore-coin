@@ -5,7 +5,7 @@ import {
   randomBytes,
   scryptSync,
 } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import elliptic from "npm:elliptic";
 
 const EC = new elliptic.ec("secp256k1");
@@ -17,7 +17,7 @@ class Wallet {
 
   constructor(password: string, fileName: string) {
     this.keys = [];
-    this.fileLocation = './user-files/'+fileName;
+    this.fileLocation = "./user-files/" + fileName;
     this.password = password;
   }
 
@@ -40,9 +40,9 @@ class Wallet {
   }
 
   static createWallet(filePath: string, password: string): Wallet {
-    if (existsSync(filePath)) {
-      //throw new Error("Wallet already exists");
-    }
+    // if (existsSync(filePath)) {  // tu jest błąd bo filePath to tak naprawdę nazwa pliku a nie ścieżka i sprawdza w złym miejscu
+    //throw new Error("Wallet already exists");
+    // }
     const wallet = new Wallet(password, filePath);
     wallet.addPrivateKey();
     encryptAndSave(wallet.keys, password, wallet.fileLocation);
@@ -52,7 +52,7 @@ class Wallet {
   }
 
   static openWallet(filePath: string, password: string): Wallet {
-    filePath = './user-files/'+filePath;
+    filePath = "./user-files/" + filePath;
     const wallet = new Wallet(password, filePath);
     wallet.keys = readWallet(filePath, password);
     wallet.fileLocation = filePath;
@@ -101,4 +101,3 @@ function readWallet(filePath: string = "wallet.json", password: string) {
 }
 
 export { Wallet };
-

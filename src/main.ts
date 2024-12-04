@@ -1,9 +1,10 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { exit } from "node:process";
-import { Message } from "./message.ts";
-import { Node } from "./node.ts";
-import { Wallet } from "./wallet.ts";
-import { Blockchain } from "./blockchain.ts";
+import { Blockchain } from "./blockchain/blockchain.ts";
+import { GenericMessage } from "./node/genericMessage.ts";
+import { Wallet } from "./wallet/wallet.ts";
+import { Node } from "./node/node.ts";
+import { sleep } from "https://deno.land/x/sleep/mod.ts";
 
 let node: Node;
 // Entry point of the program
@@ -117,30 +118,35 @@ if (import.meta.main) {
       Deno.exit(1);
     }
   }
-  const blockchainPath = `user-files/${port}/blockchain.json`;
+  const blockchainPath = `user-files/${port}/`;
 
-  node = new Node(host, port);
+  node = new Node(host, port, blockchainPath);
   flags.join.forEach((peer) => {
     node.addPeer(peer, true);
   });
-  if (node.peers && node.peers.length > 0) {
-    node.sayHi(node.peers[node.peers.length - 1]);
+  // if (node.peers && node.peers.length > 0) {
+  //   node.sayHi(node.peers[node.peers.length - 1]);
+  // }
+
+  if (flags.init) {
+    node.blockchain = new Blockchain(undefined, 5, 10);
+    node.blockchain.saveBlockChain(blockchainPath);
+  } else if (flags.join) {
+    await node.askForBlockchain();
+  } else {
+    node.blockchain = Blockchain.fromJson(
+      Deno.readTextFileSync(blockchainPath),
+    );
   }
 
-  let blockchain = null;
-
-  if(flags.init){
-    blockchain = new Blockchain(undefined, 5, 10);
-    blockchain.saveBlockChain(blockchainPath);
-  }else{
-     blockchain = Blockchain.fromJson(Deno.readTextFileSync(blockchainPath));
+  if (flags.init) {
+    while (true) {
+      node.mineBlock();
+      await sleep(5);
+    }
+    // node.blockchain.saveBlockChain(blockchainPath);
   }
-  
-  blockchain.mineBlock();
-  blockchain.saveBlockChain(blockchainPath);
-  
-  
-  
+
   //console.log(`%cEnter message or "exit" to quit.`, "color: gray");
   //readInput().catch((err) => console.error(err));
 }
@@ -162,7 +168,7 @@ async function readInput() {
     } else if (input.toLowerCase() === "peers") {
       console.log(`Peers: ${node.peers.join(", ")}`);
     } else {
-      await node.broadcast(new Message(input));
+      await node.broadcast(new GenericMessage(input));
     }
   }
 }

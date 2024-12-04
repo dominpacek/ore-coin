@@ -24,7 +24,7 @@ class Block {
     this.hash = this.toHash();
   }
 
-  toHash() {
+  toHash(): string {
     return createHash("sha256")
       .update(
         this.index + this.previousHash + this.timestamp +

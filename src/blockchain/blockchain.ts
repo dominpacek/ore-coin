@@ -46,8 +46,23 @@ class Blockchain {
     const obj = JSON.parse(json);
     //console.log(obj);
     const blockchain = new Blockchain(undefined, obj.difficulty, obj.reward);
-    blockchain.blocks = obj.blocks;
+    blockchain.blocks = obj.blocks.map((block: any) => Block.fromJson(block));
     return blockchain;
+  }
+  
+  isValid(): boolean {
+    for (let i = 1; i < this.blocks.length; i++) {
+      if (this.blocks[i].hash !== this.blocks[i].toHash()) {
+        console.log(`Block ${i} hash is invalid`);
+        return false;
+      }
+      if (this.blocks[i].previousHash !== this.blocks[i - 1].toHash()) {
+        console.log(`Block ${i} previous hash is invalid`);
+        return false;
+      }
+    }
+    console.log("Blockchain is valid");
+    return true;
   }
 }
 

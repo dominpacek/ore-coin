@@ -129,7 +129,7 @@ if (import.meta.main) {
   // }
 
   if (flags.init) {
-    node.blockchain = new Blockchain(undefined, 5, 10);
+    node.blockchain = new Blockchain(undefined);
     node.blockchain.saveBlockChain(blockchainPath);
   } else if (flags.join) {
     await node.askForBlockchain();

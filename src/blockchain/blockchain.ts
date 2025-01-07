@@ -5,18 +5,12 @@ class Blockchain {
   reward: number = 10;
   blocks: Block[] = [];
 
-  constructor(
-    genesisBlock: Block | undefined,
-    difficulty: number = 4,
-    reward: number = 10,
-  ) {
-    this.blocks = [genesisBlock ?? this.startGenesisBlock()];
-    this.difficulty = difficulty;
-    this.reward = reward;
+  constructor(blocks: Block[] | undefined) {
+    this.blocks = blocks ?? [this.startGenesisBlock()];
   }
 
   startGenesisBlock(): Block {
-    return new Block(Date.now(), []);
+    return new Block(Date.parse("2001-03-15"), []);
   }
 
   getLatestBlock(): Block {
@@ -45,24 +39,50 @@ class Blockchain {
     // load whole object from file
     const obj = JSON.parse(json);
     //console.log(obj);
-    const blockchain = new Blockchain(undefined, obj.difficulty, obj.reward);
-    blockchain.blocks = obj.blocks.map((block: any) => Block.fromJson(block));
+    const blockchain = new Blockchain([]);
+    blockchain.blocks = obj.blocks.map((block: object) => Block.fromJson(block));
     return blockchain;
   }
-  
+
   isValid(): boolean {
+    // Complete validation method for the blockchain
+    if (!this.validateGenesisBlock(this.blocks[0])) {
+      return false;
+    }
+
     for (let i = 1; i < this.blocks.length; i++) {
-      if (this.blocks[i].hash !== this.blocks[i].toHash()) {
-        console.log(`Block ${i} hash is invalid`);
+      const currentlyCheckingBlock = this.blocks[i];
+
+      // Check if the index is correct
+      if (currentlyCheckingBlock.index !== i) {
         return false;
       }
-      if (this.blocks[i].previousHash !== this.blocks[i - 1].toHash()) {
-        console.log(`Block ${i} previous hash is invalid`);
+      // Validate the block itself
+      if (!currentlyCheckingBlock.isValid(this.difficulty)) {
+        return false;
+      }
+      const previousBlock = this.blocks[i - 1];
+      // Check if the previous block's hash matches
+      if (currentlyCheckingBlock.previousHash !== previousBlock.hash) {
+        return false;
+      }
+      // Check if the timestamp is after the previous block
+      if (currentlyCheckingBlock.timestamp < previousBlock.timestamp) {
         return false;
       }
     }
+
+    // TODO validate transactions after they're implemented
+
     console.log("Blockchain is valid");
     return true;
+  }
+
+  private validateGenesisBlock(genesisBlock: Block): boolean {
+    // Check if the genesis block is as expected
+    const expectedGenesisBlock = this.startGenesisBlock();
+    return genesisBlock.toHash() === expectedGenesisBlock.toHash() &&
+      genesisBlock.isValid(0);
   }
 }
 

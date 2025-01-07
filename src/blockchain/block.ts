@@ -36,7 +36,7 @@ class Block {
   mine(difficulty: number) {
     console.log("Start mining...");
     console.log("Mining block with difficulty: " + difficulty);
-    while (!this.hash.startsWith(new Array(difficulty).fill(0).join(""))) {
+    while (!this.doesHashMatchDifficulty(difficulty)) {
       this.nonce++;
       this.hash = this.toHash();
     }
@@ -57,6 +57,32 @@ class Block {
       block.nonce,
     );
   }
+
+  isValid(difficulty: number): boolean {
+    // Complete validation method for the block
+    return this.isHashValid() &&
+      this.doesHashMatchDifficulty(difficulty)
+      && this.isTimestampValid();
+  }
+
+  private isHashValid(): boolean {
+    // Check if the hash property matches the actual hash of the block
+    return this.hash === this.toHash();
+  }
+
+  
+  private doesHashMatchDifficulty(difficulty: number): boolean {
+    // Check if the hash of the block fulfills the difficulty requirement
+    if (this.index === 0) return true; // Genesis block doesn't need to match this
+    
+    return this.hash.startsWith(new Array(difficulty).fill(0).join(""));
+  }
+  
+  private isTimestampValid(): boolean {
+    // Check if the timestamp is in the past 
+    return this.timestamp <= Date.now();
+  }
+  
 }
 
 export { Block };

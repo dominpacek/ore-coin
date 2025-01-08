@@ -99,32 +99,46 @@ export class Node {
   }
 
   async askForBlockchain() {
-    console.log(`Asking peer ${this.peers[0]} for blockchain`);
-    try {
-      const req = new Request(this.peers[0] + "/blockchain", {
-        method: "GET",
-      });
+    // Ask all peers for their blockchains, choose the longest valid one
+    let longestBlockchain: Blockchain | null = null;
 
-      const response = await fetch(req);
-      const obj = await response.json();
+    console.log(`Asking peers for blockchain`);
+    for (const peer of this.peers) {
+      try {
+        const req = new Request(peer + "/blockchain", {
+          method: "GET",
+        });
 
-      this.blockchain = new Blockchain(
-        undefined,
-        obj.difficulty,
-        obj.reward,
-      );
-      this.blockchain.blocks = obj.blocks;
+        const response = await fetch(req);
+        const obj = await response.json();
+
+        const receivedBlockchain = Blockchain.fromJson(JSON.stringify(obj));
+
+        if (
+          !longestBlockchain ||
+          receivedBlockchain.blocks.length > longestBlockchain.blocks.length
+        ) {
+          longestBlockchain = receivedBlockchain;
+        }
+      } catch (error) {
+        console.error(`Error fetching blockchain from ${peer}:`, error);
+      }
+    }
+    // TODO pow when two blockchains are the same length
+
+    if (longestBlockchain) {
+      this.blockchain = longestBlockchain;
       console.log(
-        `Received blockchain of length ${this.blockchain.blocks.length}`,
+        `Fetched blockchain ${this.blockchain.blocks.length} blocks long.`,
       );
-    } catch (error) {
-      console.error("Error fetching blockchain:", error);
+    } else {
+      console.log("No valid blockchain received from peers.");
     }
   }
 
   public broadcastBlock(block: Block) {
     const message = new GenericMessage(JSON.stringify(block));
-    console.log(`❎: Broadcasting mined block index=${block.index}`);
+    console.log(`📡: Broadcasting mined block index=${block.index}`);
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }

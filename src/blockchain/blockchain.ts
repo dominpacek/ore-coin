@@ -56,17 +56,9 @@ class Blockchain {
       if (currentlyCheckingBlock.index !== i) {
         return false;
       }
-      // Validate the block itself
-      if (!currentlyCheckingBlock.isValid(this.difficulty)) {
-        return false;
-      }
+      // Validate the block
       const previousBlock = this.blocks[i - 1];
-      // Check if the previous block's hash matches
-      if (currentlyCheckingBlock.previousHash !== previousBlock.hash) {
-        return false;
-      }
-      // Check if the timestamp is after the previous block
-      if (currentlyCheckingBlock.timestamp < previousBlock.timestamp) {
+      if (!currentlyCheckingBlock.isValid(previousBlock, this.difficulty)) {
         return false;
       }
     }
@@ -81,7 +73,7 @@ class Blockchain {
     // Check if the genesis block is as expected
     const expectedGenesisBlock = this.startGenesisBlock();
     return genesisBlock.toHash() === expectedGenesisBlock.toHash() &&
-      genesisBlock.isValid(0);
+      genesisBlock.isValidAlone(0);
   }
 }
 

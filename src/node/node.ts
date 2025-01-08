@@ -135,7 +135,7 @@ export class Node {
       .get("/", (context) => {
         context.response.body = "Hello world!";
       })
-      .get("/node", (context) => {
+      .get("/node", (context) => { // todo sprwadzić czy można to wywalić
         context.response.body = `Dzień dobry od node ${this.getUrl()}`;
       })
       .post("/node/add_peer", (context) => {
@@ -150,6 +150,12 @@ export class Node {
       })
       .post("/blockchain/add_block", (context) => {
         this.handleAddBlock(context);
+      })
+      .get("/transactions/balance", (context) => {
+        this.handleGetBalance(context);
+      })
+      .post("/transactions", (context) => {
+        this.handleAddTransaction(context);
       });
 
     const app = new Application();
@@ -270,5 +276,30 @@ export class Node {
         message: "Internal Server Error",
       };
     }
+  }
+
+  // TODO
+  async handleGetBalance(context: any) {
+    try {
+      const body = context.request.body;
+      if (body.type() !== "json") {
+        context.response.status = 400;
+        return;
+      }
+
+      const balance = this.blockchain.getBalance();
+      context.response.body = { balance: balance };
+      context.response.status = 200;
+    } catch (error) {
+      console.error("Error handling request:", error);
+      context.response.status = 500;
+      context.response.body = {
+        message: "Internal Server Error",
+      };
+    }
+  }
+
+  //TODO
+  async handleAddTransaction(context: any) {
   }
 }

@@ -11,7 +11,7 @@ let node: Node;
 if (import.meta.main) {
   // create directory for user files
   try {
-    Deno.mkdirSync("user-files");
+    Deno.mkdirSync("../user-files");
   } catch (e) {
     if (e instanceof Deno.errors.AlreadyExists) {
       // pass
@@ -40,6 +40,7 @@ if (import.meta.main) {
   //console.log(flags);
 
   if (flags.wallet) {
+    // TODO wydzielić do osobnego pliku
     let wallet: Wallet;
     while (true) {
       console.log("\n@@ Zarządzanie portfelem @@");
@@ -77,7 +78,9 @@ if (import.meta.main) {
 
     console.log("1: Wypisz dostępne klucze");
     console.log("2: Dodaj nowy, losowy klucz");
-    console.log("3: Zapisz i wyjdź");
+    console.log("3: Wyślij pieniądze");
+    console.log("4: Sprawdź saldo");
+    console.log("Q: Zapisz i wyjdź");
 
     while (true) {
       const choice = prompt("\nWybierz opcję");
@@ -94,7 +97,33 @@ if (import.meta.main) {
         });
       } else if (choice == "2") {
         wallet.addPrivateKey();
-      } else if (choice == "3") {
+        // TODO opcje 3 i 4
+      } 
+      else if(choice == "3") {
+          // TODO get blockchain
+          const blockchain = new Blockchain(undefined, 5, 10, "");
+
+          const toAddress = prompt("Podaj adres odbiorcy: ");
+          if(toAddress == null) {
+            console.log("Nie podano adresu odbiorcy!!\n\n");
+            continue;
+          }
+          console.log("Wybierz klucz prywatny: ");
+          wallet.keys.forEach((key, index) => {
+            console.log(
+              `[${index}] `,
+              key, '\n'
+            );
+          });
+
+          const keyNumber: number = parseInt(prompt("Wybierz klucz: ") ?? "");
+          const fromKey = wallet.keys[keyNumber - 1];
+
+          const amount = parseInt(prompt("Podaj kwotę: ") ?? "");
+
+          wallet.createTransaction(toAddress, fromKey, amount, blockchain);
+      }
+      else if (choice == "Q") {
         wallet.saveWallet();
         exit();
       }
@@ -109,7 +138,7 @@ if (import.meta.main) {
   }
 
   try {
-    Deno.mkdirSync(`user-files/${port}`);
+    Deno.mkdirSync(`../user-files/${port}`);
   } catch (e) {
     if (e instanceof Deno.errors.AlreadyExists) {
       // pass
@@ -118,7 +147,7 @@ if (import.meta.main) {
       Deno.exit(1);
     }
   }
-  const blockchainPath = `user-files/${port}/`;
+  const blockchainPath = `../user-files/${port}/`;
 
   node = new Node(host, port, blockchainPath);
   flags.join.forEach((peer) => {
@@ -129,7 +158,8 @@ if (import.meta.main) {
   // }
 
   if (flags.init) {
-    node.blockchain = new Blockchain(undefined, 5, 10);
+    // TODO dodać adres dla coinbase
+    node.blockchain = new Blockchain(undefined, 5, 10, "");
     node.blockchain.saveBlockChain(blockchainPath);
   } else if (flags.join) {
     await node.askForBlockchain();

@@ -9,7 +9,7 @@ import { sleep } from "https://deno.land/x/sleep/mod.ts";
 let node: Node;
 // Entry point of the program
 if (import.meta.main) {
-  // create directory for user files
+  // Create directory for user files (this is where the blockchain will be stored)
   try {
     Deno.mkdirSync("../user-files");
   } catch (e) {
@@ -23,6 +23,8 @@ if (import.meta.main) {
 
   console.log(`%cWitaj w Górniczej Dolinie! ⛏`, "color: blue");
 
+  // TODO cleanup flags
+  // add join flag, evil flag
   const flags = parseArgs(Deno.args, {
     boolean: ["init", "wallet"],
     string: ["host", "port", "join"],
@@ -36,8 +38,6 @@ if (import.meta.main) {
       "port": "p",
     },
   });
-
-  //console.log(flags);
 
   if (flags.wallet) {
     // TODO wydzielić do osobnego pliku
@@ -159,7 +159,7 @@ if (import.meta.main) {
 
   if (flags.init) {
     // TODO dodać adres dla coinbase
-    node.blockchain = new Blockchain(undefined, 5, 10, "");
+    node.blockchain = new Blockchain(undefined);
     node.blockchain.saveBlockChain(blockchainPath);
   } else if (flags.join) {
     await node.askForBlockchain();

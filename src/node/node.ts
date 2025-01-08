@@ -257,7 +257,6 @@ export class Node {
 
   addBlockHandler = (message: GenericMessage) => {
     const receivedBlock = Block.fromJson(JSON.parse(message.content));
-
     const latestBlock =
       this.blockchain.blocks[this.blockchain.blocks.length - 1];
     const latestIndex = latestBlock.index;
@@ -277,9 +276,13 @@ export class Node {
       );
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
-      // TODO check if is valid before asking for blockchain
+      if (receivedBlock.isValidAlone(this.blockchain.difficulty)) {
       console.log(`⬛ Received new 'orphan' block, requesting full blockchain.`);
       this.askForBlockchain();
+      }
+      else {
+        console.error(`❌ Received invalid 'orphan' block.`);
+      }
     }
   }
 

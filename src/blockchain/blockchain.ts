@@ -60,9 +60,10 @@ class Blockchain {
     return blockchain;
   }
 
-  isValid(): boolean {
+  isValid(verbose: boolean = false): boolean {
     // Complete validation method for the blockchain
     if (!this.validateGenesisBlock(this.blocks[0])) {
+      if (verbose) console.log("Invalid genesis block.");
       return false;
     }
 
@@ -71,18 +72,20 @@ class Blockchain {
 
       // Check if the index is correct
       if (currentlyCheckingBlock.index !== i) {
+        if (verbose) console.log(`Expected block id=${i}, got ${currentlyCheckingBlock.index}.`);
         return false;
       }
       // Validate the block
       const previousBlock = this.blocks[i - 1];
-      if (!currentlyCheckingBlock.isValid(previousBlock, this.difficulty)) {
+      if (!currentlyCheckingBlock.isValid(previousBlock, this.difficulty, verbose)) {
+        if (verbose) console.log(`Invalid block at id=${i}.`);
         return false;
       }
     }
 
     // TODO validate transactions after they're implemented
 
-    console.log("Blockchain is valid");
+    if (verbose) console.log("Blockchain is valid");
     return true;
   }
 

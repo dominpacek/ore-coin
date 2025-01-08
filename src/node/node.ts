@@ -105,7 +105,7 @@ export class Node {
     let longestBlockchainLength = 0;
     let longestBlockchain: Blockchain | null = null;
 
-    console.log(`Asking peers for blockchain`);
+    console.log(`Asking peers for blockchain.`);
     for (const peer of this.peers) {
       try {
         const req = new Request(peer + "/blockchain", {
@@ -116,9 +116,12 @@ export class Node {
         const obj = await response.json();
         const receivedBlockchainLength = obj.blocks.length;
         if (receivedBlockchainLength > longestBlockchainLength) {
+          const receivedBlockchain = Blockchain.fromJson(JSON.stringify(obj));
+          if (!receivedBlockchain.isValid()) {
+            continue; // Ignore invalid blockchains
+          }
           longestBlockchainLength = receivedBlockchainLength;
-          longestBlockchain = new Blockchain();
-          longestBlockchain.blocks = obj.blocks;
+          longestBlockchain = receivedBlockchain;
         }
       } catch (error) {
         console.error(`Error fetching blockchain from ${peer}:`, error);
@@ -155,8 +158,7 @@ export class Node {
 
   public broadcastBlock(block: Block) {
     const message = new GenericMessage(JSON.stringify(block));
-    console.log(`📡: Broadcasting mined block index=${block.index}`);
-    console.log(`📡: Broadcasting mined block hash=${block.hash}`);
+    console.log(`📡: Broadcasting mined block (id=${block.index}).`);
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }
@@ -164,12 +166,6 @@ export class Node {
   async runHttpServer() {
     const router = new Router();
     router
-      .get("/", (context) => {
-        context.response.body = "Hello world!";
-      })
-      .get("/node", (context) => { // todo sprwadzić czy można to wywalić
-        context.response.body = `Dzień dobry od node ${this.getUrl()}`;
-      })
       .post("/node/add_peer", (context) => {
         this.addPeerHandler(context);
       })
@@ -281,6 +277,7 @@ export class Node {
       );
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
+      // TODO check if is valid before asking for blockchain
       console.log(`⬛ Received new 'orphan' block, requesting full blockchain.`);
       this.askForBlockchain();
     }

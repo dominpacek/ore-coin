@@ -32,26 +32,30 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 
 ### 3. Transakcje przekazania środków (termin oddania: 13.12.2024)
 
-- Tworzenie transakcji w formacie json (lista w bloku)
-- Walidacja transakcji pod kątem double-spending
-- Obliczanie aktualnych sald na kontach
+- [ ] Tworzenie transakcji w formacie json (lista w bloku)
+- [ ] Walidacja transakcji pod kątem double-spending
+- [ ] Obliczanie aktualnych sald na kontach
 
 ### 4. Kopanie asynchroniczne (termin oddania: 10.01.2025)
 
-- Obsługa forków oraz orphan block
-- Tworzenie forków przez złośliwego node
+- [ ] Obsługa orphan block
+  - sytuacja, kiedy dostajemy nowy blok ale nie dostaliśmy jeszcze jego rodzica (dopytać się pozostałych node "hej, pokaż cały blockchain bo ja nie mam przodka tego bloku")
+- [ ] Obsługa forków
+  - sytuacja, kiedy dwa node wykopią blok w mniej więcej tym samym czasie
+- [ ] Tworzenie forków przez złośliwego node
 
 ### 5. Sprawozdanie końcowe (termin oddania: 24.01.2025)
 
 ## Node
-Węzeł sieci. Udostępnia serwer HTTP z endpointami:
-|Metoda|URL|Opis|
-|------|---|-----------|
-|POST|/node/add_message|Wysłanie wiadomości (tylko do wyświetlenia)|
-|POST|/node/add_peer|Zgłoszenie nowego peera|
-|GET|/blockchain|Pobranie wszystkich bloków blockchaina|
-|POST|/blockchain/add_block|Zgłoszenie nowego bloku|
 
+Węzeł sieci. Udostępnia serwer HTTP z endpointami:
+
+| Metoda | URL                   | Opis                                        |
+| ------ | --------------------- | ------------------------------------------- |
+| POST   | /node/add_message     | Wysłanie wiadomości (tylko do wyświetlenia) |
+| POST   | /node/add_peer        | Zgłoszenie nowego peera                     |
+| GET    | /blockchain           | Pobranie wszystkich bloków blockchaina      |
+| POST   | /blockchain/add_block | Zgłoszenie nowego bloku                     |
 
 ## Blockchain
 

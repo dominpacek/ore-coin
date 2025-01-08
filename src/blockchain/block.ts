@@ -34,8 +34,8 @@ class Block {
   }
 
   mine(difficulty: number) {
+    // Keep mining the block until the hash matches the difficulty
     console.log("Start mining...");
-    console.log("Mining block with difficulty: " + difficulty);
     while (!this.doesHashMatchDifficulty(difficulty)) {
       this.nonce++;
       this.hash = this.toHash();

@@ -138,7 +138,7 @@ export class Node {
 
   public broadcastBlock(block: Block) {
     const message = new GenericMessage(JSON.stringify(block));
-    console.log(`❎: Broadcasting mined block index=${block.index}`);
+    console.log(`📡: Broadcasting mined block index=${block.index}`);
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }

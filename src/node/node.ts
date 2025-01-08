@@ -5,7 +5,7 @@ import { Block } from "../blockchain/block.ts";
 import { Transaction } from "../blockchain/transaction.ts";
 import { Blockchain } from "../blockchain/blockchain.ts";
 import { GenericMessage } from "./genericMessage.ts";
-
+const debug_write_messages = false;
 
 export class Node {
   address: string;
@@ -56,9 +56,9 @@ export class Node {
     endpoint: string = "/node/add_message",
   ) {
     this.knownMessages.push(message.token);
-    console.log(
-      `➡️: Broadcasting ${message.token} to ${this.peers.length} peers.`,
-    );
+    if (debug_write_messages) {
+      console.log(`📡 Broadcasting message ${message.token} to ${this.peers.length} peers.`);
+    }
     await Promise.all(this.peers.map(async (peer) => {
       await this.send(message, peer, endpoint); // Run all `send` calls concurrently
     }));
@@ -102,6 +102,7 @@ export class Node {
 
   async askForBlockchain() {
     // Ask all peers for their blockchains, choose the longest valid one
+    let longestBlockchainLength = 0;
     let longestBlockchain: Blockchain | null = null;
 
     console.log(`Asking peers for blockchain`);
@@ -113,28 +114,27 @@ export class Node {
 
         const response = await fetch(req);
         const obj = await response.json();
-
-        const receivedBlockchain = Blockchain.fromJson(JSON.stringify(obj));
-
-        if (
-          !longestBlockchain ||
-          receivedBlockchain.blocks.length > longestBlockchain.blocks.length
-        ) {
-          longestBlockchain = receivedBlockchain;
+        const receivedBlockchainLength = obj.blocks.length;
+        if (receivedBlockchainLength > longestBlockchainLength) {
+          longestBlockchainLength = receivedBlockchainLength;
+          longestBlockchain = new Blockchain();
+          longestBlockchain.blocks = obj.blocks;
         }
       } catch (error) {
         console.error(`Error fetching blockchain from ${peer}:`, error);
       }
     }
-    //
 
     if (longestBlockchain) {
       this.blockchain = longestBlockchain;
       console.log(
-        `Fetched blockchain ${this.blockchain.blocks.length} blocks long.`,
+        `Fetched blockchain ${this.blockchain.blocks.length}bl long.`,
       );
     } else {
-      console.log("No valid blockchain received from peers.");
+      console.log(
+        "No valid blockchain received from peers, starting genesis block.",
+      );
+      this.blockchain = new Blockchain();
     }
   }
 
@@ -156,6 +156,7 @@ export class Node {
   public broadcastBlock(block: Block) {
     const message = new GenericMessage(JSON.stringify(block));
     console.log(`📡: Broadcasting mined block index=${block.index}`);
+    console.log(`📡: Broadcasting mined block hash=${block.hash}`);
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }
@@ -170,17 +171,14 @@ export class Node {
         context.response.body = `Dzień dobry od node ${this.getUrl()}`;
       })
       .post("/node/add_peer", (context) => {
-        this.handleAddPeer(context);
-      })
-      .post("/node/add_message", (context) => {
-        this.handleAddMessage(context);
+        this.addPeerHandler(context);
       })
       .get("/blockchain", (context) => {
         context.response.body = JSON.stringify(this.blockchain);
         context.response.type = "application/json";
       })
       .post("/blockchain/add_block", (context) => {
-        this.handleAddBlock(context);
+        this.handleGenericMessage(context, this.addBlockHandler);
       })
       .get("/transactions/balance", (context) => {
         this.handleGetBalance(context);
@@ -196,69 +194,39 @@ export class Node {
     await app.listen({ port: this.port });
   }
 
-  // async handleRequest(context: any, callback: Function) {
-  //   // Function 
-  //   try {
-  //     const body = context.request.body;
-  //     if (body.type() !== "json") {
-  //       context.response.status = 400;
-  //       context.response.body = {
-  //         message: "Unsupported content type",
-  //       };
-  //       return;
-  //     }
-
-  //     const req = await body.json();
-  //     const address = req.address as string;
-  //     const balance = this.blockchain.getBalance(address);
-
-  //     context.response.body = { balance: balance };
-  //     context.response.status = 200;
-
-  //   } catch (error) {
-  //     console.error("Error handling request:", error);
-  //     context.response.status = 500;
-  //     context.response.body = {
-  //       message: "Internal Server Error",
-  //     };
-  //   }
-  // }
-
-  async handleAddMessage(context: any) {
+  async handleGenericMessage(context: any, requestHandlerCallback: Function) {
+    //TODO callback is async, write its signature
+    // Handles a request that contains a json GenericMessage using the provided callback function
     try {
       const body = context.request.body;
-      if (body.type() === "json") {
-        const req = await body.json();
-        const mess = req as GenericMessage;
-        context.response.status = 200;
-        context.response.body = { message: "response!" };
-        // console.log("Json content", x);
-        if (!this.knownMessages.includes(mess.token)) {
-          console.log(`📥 Received new message`, mess);
-          this.broadcast(mess);
-        } else {
-          // Message was already received, don't broadcast
-          console.log(
-            `📥 %cReceived message ${mess.token} again. No rebroadcast.`,
-            "color: gray",
-          );
-        }
-      } else {
+      if (body.type() !== "json") {
         context.response.status = 400;
-        context.response.body = {
-          message: "Unsupported content type",
-        };
+        return;
+      }
+      
+      context.response.status = 200;
+      const req = await body.json();
+      const mess = req as GenericMessage; // Convert json to GenericMessage
+
+      if (this.knownMessages.includes(mess.token)) {
+        // If message was already received, ignore it and don't broadcast
+      } else {
+        // If message was not received before, broadcast it to peers and handle it
+        if (debug_write_messages) {
+          console.log(`📥 Received new message for handler ${requestHandlerCallback.name}`, mess);
+        }
+        this.broadcast(mess);
+        requestHandlerCallback(mess);
       }
     } catch (error) {
-      console.error("Error handling request:", error);
-      context.response.status = 500;
-      context.response.body = {
-        message: "Internal Server Error",
-      };
+      console.error(
+        `❌❌❌ Error handling request with handler ${requestHandlerCallback.name}: `,
+        error,
+      );
     }
   }
 
-  async handleAddPeer(context: any) {
+  async addPeerHandler(context: any) {
     try {
       const body = context.request.body;
       if (body.type() === "json") {
@@ -291,107 +259,39 @@ export class Node {
     }
   }
 
-  async handleAddBlock(context: any) {
-    try {
-      const body = context.request.body;
-      if (body.type() === "json") {
-        const req = await body.json();
-        const mess = req as GenericMessage;
-        if (this.knownMessages.includes(mess.token)) {
-          return;
-        }
-        this.broadcast(mess, "/blockchain/add_block");
+  addBlockHandler = (message: GenericMessage) => {
+    const receivedBlock = Block.fromJson(JSON.parse(message.content));
 
-        const receivedBlock = Block.fromJson(JSON.parse(mess.content));
-        // Sprawdź czy indeks nowego bloku jest o 1 wyższy od ostatniego posiadanego
-        const nextIndex =
-          this.blockchain.blocks[this.blockchain.blocks.length - 1].index + 1;
-        if (nextIndex == receivedBlock.index) {
-          // TODO sprawdzaj hash bloku
-          this.addBlock(receivedBlock);
-          console.log(
-            `🔳 Received new block. Blockchain now ${this.blockchain.blocks.length} long.`,
-          );
-          context.response.body = {
-            message: "Thanks for the new block!",
-          };
-        } else {
-          console.log(
-            `Received index ${receivedBlock.index} but wanted ${nextIndex}`,
-          );
-          context.response.body = { message: "Wrong block index." };
-        }
-        context.response.status = 200;
-      } else {
-        context.response.status = 400;
-        context.response.body = {
-          message: "Unsupported content type",
-        };
+    const latestBlock =
+      this.blockchain.blocks[this.blockchain.blocks.length - 1];
+    const latestIndex = latestBlock.index;
+
+    if (receivedBlock.index <= latestIndex) {
+      // Ignore block if it's index isn't higher than the latest block
+      return;
+    } else if (receivedBlock.index == latestIndex + 1) {
+      // Block can be added to the chain
+      if (!receivedBlock.isValid(latestBlock, this.blockchain.difficulty)) {
+        console.error(`❌ Received invalid block.`);
+        return;
       }
-    } catch (error) {
-      console.error("Error handling request:", error);
-      context.response.status = 500;
-      context.response.body = {
-        message: "Internal Server Error",
-      };
+      this.addBlock(receivedBlock);
+      console.log(
+        `🔳 Received new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`,
+      );
+    } else if (latestIndex + 1 < receivedBlock.index) {
+      // We are missing blocks, ask peers for full blockchain
+      console.log(`⬛ Received new 'orphan' block, requesting full blockchain.`);
+      this.askForBlockchain();
     }
   }
 
   // TODO
   async handleGetBalance(context: any) {
-    try {
-      const body = context.request.body;
-      if (body.type() !== "json") {
-        context.response.status = 400;
-        context.response.body = {
-          message: "Unsupported content type",
-        };
-        return;
-      }
-
-      const req = await body.json();
-      const address = req.address as string;
+    await this.handleGenericMessage(context, (mess: GenericMessage) => {
+      const address = mess.content;
       const balance = this.blockchain.getBalance(address);
-
       context.response.body = { balance: balance };
-      context.response.status = 200;
-    } catch (error) {
-      console.error("Error handling request:", error);
-      context.response.status = 500;
-      context.response.body = {
-        message: "Internal Server Error",
-      };
-    }
+    });
   }
-
-  //TODO
-  // async handleAddTransaction(context: any) {
-  //   try {
-  //     const body = context.request.body;
-  //     if (body.type() === "json") {
-  //       context.response.status = 400;
-  //       context.response.body = {
-  //         message: "Unsupported content type",
-  //       };
-  //     } else {
-  //       const req = await body.json();
-  //       const mess = req as GenericMessage;
-  //       if (this.knownMessages.includes(mess.token)) {
-  //         return;
-  //       }
-  //       this.broadcast(mess, "/transactions");
-
-  //       const receivedTransaction = Transaction.fromJson(
-  //         JSON.parse(mess.content),
-  //       );
-  //     }
-  //     context.response.status = 200;
-  //   } catch (error) {
-  //     console.error("Error handling request:", error);
-  //     context.response.status = 500;
-  //     context.response.body = {
-  //       message: "Internal Server Error",
-  //     };
-  //   }
-  // }
 }

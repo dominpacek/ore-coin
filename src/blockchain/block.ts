@@ -48,12 +48,12 @@ class Block {
   }
 
   static fromJson(block: any) {
-    // const transactions = block.transactions.map((transaction: any) =>
-    //     Transaction.fromJson(transaction)
-    // );
+    const transactions = block.transactions.map((transaction: object) =>
+        Transaction.fromJson(JSON.stringify(transaction))
+    );
     return new Block(
       block.timestamp,
-      [],
+      transactions,
       block.previousHash,
       block.index,
       block.nonce,
@@ -69,12 +69,33 @@ class Block {
 
   isValid(previousBlock: Block, difficulty: number): boolean {
     // Complete validation method for the block considering the previous block
-    return this.isHashValid() &&
-      this.doesHashMatchDifficulty(difficulty) &&
-      this.isTimestampValid() &&
-      this.previousHash === previousBlock.hash &&
-      this.index === previousBlock.index + 1 &&
-      this.timestamp > previousBlock.timestamp;
+    if (!this.isHashValid()) {
+      console.log("Invalid hash");
+      return false;
+    }
+    if (!this.doesHashMatchDifficulty(difficulty)) {
+      console.log("Checking hash", this.hash);
+      console.log("Hash does not match difficulty");
+
+      return false;
+    }
+    if (!this.isTimestampValid()) {
+      console.log("Invalid timestamp");
+      return false;
+    }
+    if (this.previousHash !== previousBlock.hash) {
+      console.log("Previous hash does not match");
+      return false;
+    }
+    if (this.index !== previousBlock.index + 1) {
+      console.log("Invalid index");
+      return false;
+    }
+    if (this.timestamp <= previousBlock.timestamp) {
+      console.log("Timestamp is not greater than previous block's timestamp");
+      return false;
+    }
+    return true;
   }
 
   private isHashValid(): boolean {
@@ -84,7 +105,7 @@ class Block {
 
   private doesHashMatchDifficulty(difficulty: number): boolean {
     // Check if the hash of the block fulfills the difficulty requirement
-    if (this.index === 0) return true; // Genesis block doesn't need to match this
+    if (this.index === 0) return true; // Genesis block doesn't need to fulfill difficulty
 
     return this.hash.startsWith(new Array(difficulty).fill(0).join(""));
   }

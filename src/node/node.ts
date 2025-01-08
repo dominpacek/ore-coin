@@ -271,7 +271,7 @@ export class Node {
       return;
     } else if (receivedBlock.index == latestIndex + 1) {
       // Block can be added to the chain
-      if (!receivedBlock.isValid(latestBlock, this.blockchain.difficulty)) {
+      if (!receivedBlock.isValid(latestBlock, this.blockchain.difficulty, true)) {
         console.error(`❌ Received invalid block.`);
         return;
       }

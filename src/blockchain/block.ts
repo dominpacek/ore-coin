@@ -66,33 +66,31 @@ class Block {
       this.doesHashMatchDifficulty(difficulty) &&
       this.isTimestampValid();
   }
-
-  isValid(previousBlock: Block, difficulty: number): boolean {
-    // Complete validation method for the block considering the previous block
+  
+  isValid(previousBlock: Block, difficulty: number, verbose: boolean = false): boolean {
+    // Complete validation method for the block considering the previous block.
     if (!this.isHashValid()) {
-      console.log("Invalid hash");
+      if (verbose) console.log("Invalid hash.");
       return false;
     }
     if (!this.doesHashMatchDifficulty(difficulty)) {
-      console.log("Checking hash", this.hash);
-      console.log("Hash does not match difficulty");
-
+      if (verbose) console.log("Hash does not match difficulty.");
       return false;
     }
     if (!this.isTimestampValid()) {
-      console.log("Invalid timestamp");
+      if (verbose) console.log("Invalid timestamp.");
       return false;
     }
     if (this.previousHash !== previousBlock.hash) {
-      console.log("Previous hash does not match");
+      if (verbose) console.log("Previous hash does not match.");
       return false;
     }
     if (this.index !== previousBlock.index + 1) {
-      console.log("Invalid index");
+      if (verbose) console.log("Invalid index.");
       return false;
     }
     if (this.timestamp <= previousBlock.timestamp) {
-      console.log("Timestamp is not greater than previous block's timestamp");
+      if (verbose) console.log("Timestamp is not greater than previous block's timestamp.");
       return false;
     }
     return true;

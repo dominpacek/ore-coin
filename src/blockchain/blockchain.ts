@@ -1,15 +1,15 @@
 import { Block } from "../blockchain/block.ts";
 import { Transaction, TxOut } from "../blockchain/transaction.ts";
+import { MINING_REWARD } from "../config.ts";
 
 class Blockchain {
   difficulty: number = 4;
-  reward: number = 10; // Coinbase amount
   blocks: Block[] = [];
   pendingTransactions: Transaction[] = []; // Transactions waiting to be mined
   unspentTransactions: Transaction[] = []; // Transactions that aren't spent and can be used as inputs to new transactions
 
-  constructor(blocks: Block[] | undefined) {
-    this.blocks = blocks ?? [this.startGenesisBlock()];
+  constructor() {
+    this.blocks = [this.startGenesisBlock()];
   }
 
   startGenesisBlock(): Block {
@@ -20,11 +20,16 @@ class Blockchain {
     return this.blocks[this.blocks.length - 1];
   }
 
-  // na razie kopanie bez transakcji
-  mineBlock() {
+  mineBlock(rewardAddress: string): Block {
+    let transactions = this.pendingTransactions;
+    this.pendingTransactions = [];
+    const coinbase = Transaction.newCoinbaseTx(rewardAddress, MINING_REWARD);
+    this.unspentTransactions.push(coinbase);
+    transactions = [coinbase, ...transactions];
+
     const newBlock = new Block(
       Date.now(),
-      [],
+      transactions,
       this.getLatestBlock().hash,
       this.getLatestBlock().index + 1,
     );
@@ -32,18 +37,26 @@ class Blockchain {
     return newBlock;
   }
 
+
+
   saveBlockChain(path: string): void {
     // Save the whole object to a file
     Deno.writeTextFileSync(path + "blockchain.json", JSON.stringify(this));
-    console.log("Blockchain saved");
+    console.log("Blockchain saved to " + path + "blockchain.json");
   }
 
   static fromJson(json: string): Blockchain {
     // Load blockchain from a json string
     const obj = JSON.parse(json);
-    const blockchain = new Blockchain([]);
+    const blockchain = new Blockchain();
     blockchain.blocks = obj.blocks.map((block: object) => Block.fromJson(block));
-    // TODO map transactions
+    blockchain.difficulty = obj.difficulty;
+    blockchain.pendingTransactions = obj.pendingTransactions.map((tx: object) =>
+      Transaction.fromJson(JSON.stringify(tx))
+    );
+    blockchain.unspentTransactions = obj.unspentTransactions.map((tx: object) =>
+      Transaction.fromJson(JSON.stringify(tx))
+    );
     return blockchain;
   }
 
@@ -73,10 +86,17 @@ class Blockchain {
     return true;
   }
 
-  getUnspentTransactions(address: string): Transaction[] {
+  getUnspentTransactionsForAddress(address: string): Transaction[] {
     return this.unspentTransactions.filter((tx) => {
       return tx.outputs.find((output) => output.address === address);
     });
+  }
+
+  getBalance(address: string): number {
+    const unspentTransactionsForAddress = this.getUnspentTransactionsForAddress(address);
+    return unspentTransactionsForAddress.reduce((balance, tx) => {
+      return balance + tx.outputs.reduce((balance, output) => balance + output.amount, 0);
+    }, 0);
   }
   
   private validateGenesisBlock(genesisBlock: Block): boolean {

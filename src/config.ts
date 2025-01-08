@@ -1,0 +1,1 @@
+export const MINING_REWARD = 50;

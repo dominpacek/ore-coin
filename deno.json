@@ -1,9 +1,9 @@
 {
   "tasks": {
-    "node1": "deno run --watch --allow-read=user-files/ --allow-write=user-files/ --allow-net src/main.ts --port 5801 --init",
-    "node2": "deno run --watch --allow-read=user-files/ --allow-write=user-files/ --allow-net src/main.ts --port 5802 --join http://localhost:5801",
-    "node3": "deno run --watch --allow-read=user-files/ --allow-write=user-files/ --allow-net src/main.ts --port 5803 --join http://localhost:5802",
-    "wallet": "deno run --watch --allow-read=user-files/ --allow-write=user-files/ src/main.ts --wallet"
+    "node1": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5801 --init",
+    "node2": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5802 --join http://localhost:5801",
+    "node3": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5803 --join http://localhost:5802",
+    "wallet": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --wallet"
   },
   "imports": {
     "@oak/oak": "jsr:@oak/oak@^17.1.1",

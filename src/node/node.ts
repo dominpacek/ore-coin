@@ -2,15 +2,17 @@
 import { Application } from "jsr:@oak/oak/application";
 import { Router } from "jsr:@oak/oak/router";
 import { Block } from "../blockchain/block.ts";
+import { Transaction } from "../blockchain/transaction.ts";
 import { Blockchain } from "../blockchain/blockchain.ts";
 import { GenericMessage } from "./genericMessage.ts";
+
 
 export class Node {
   address: string;
   port: number;
 
-  peers: string[] = []; // list of peer URLs
-  knownMessages: string[] = []; // remember received messages
+  peers: string[] = []; // List of peer URLs
+  knownMessages: string[] = []; // Remember received messages
 
   blockchain!: Blockchain;
   localFilesPath: string;
@@ -29,8 +31,8 @@ export class Node {
   }
 
   // Mines a block and sends it to peers
-  mineBlock() {
-    const newBlock = this.blockchain.mineBlock();
+  mineBlock(rewardAddress: string) {
+    const newBlock = this.blockchain.mineBlock(rewardAddress);
     this.addBlock(newBlock);
     this.broadcastBlock(newBlock);
   }
@@ -124,7 +126,7 @@ export class Node {
         console.error(`Error fetching blockchain from ${peer}:`, error);
       }
     }
-    // TODO pow when two blockchains are the same length
+    //
 
     if (longestBlockchain) {
       this.blockchain = longestBlockchain;
@@ -133,6 +135,21 @@ export class Node {
       );
     } else {
       console.log("No valid blockchain received from peers.");
+    }
+  }
+
+  static async askForBlockchainFromPeer(peer: string) {
+    try {
+      const req = new Request(peer + "/blockchain", {
+        method: "GET",
+      });
+
+      const response = await fetch(req);
+      const obj = await response.json();
+
+      return Blockchain.fromJson(JSON.stringify(obj));
+    } catch (error) {
+      console.error(`Error fetching blockchain from ${peer}:`, error);
     }
   }
 
@@ -169,7 +186,7 @@ export class Node {
         this.handleGetBalance(context);
       })
       .post("/transactions", (context) => {
-        this.handleAddTransaction(context);
+        // this.handleAddTransaction(context);
       });
 
     const app = new Application();
@@ -178,6 +195,34 @@ export class Node {
 
     await app.listen({ port: this.port });
   }
+
+  // async handleRequest(context: any, callback: Function) {
+  //   // Function 
+  //   try {
+  //     const body = context.request.body;
+  //     if (body.type() !== "json") {
+  //       context.response.status = 400;
+  //       context.response.body = {
+  //         message: "Unsupported content type",
+  //       };
+  //       return;
+  //     }
+
+  //     const req = await body.json();
+  //     const address = req.address as string;
+  //     const balance = this.blockchain.getBalance(address);
+
+  //     context.response.body = { balance: balance };
+  //     context.response.status = 200;
+
+  //   } catch (error) {
+  //     console.error("Error handling request:", error);
+  //     context.response.status = 500;
+  //     context.response.body = {
+  //       message: "Internal Server Error",
+  //     };
+  //   }
+  // }
 
   async handleAddMessage(context: any) {
     try {
@@ -298,10 +343,16 @@ export class Node {
       const body = context.request.body;
       if (body.type() !== "json") {
         context.response.status = 400;
+        context.response.body = {
+          message: "Unsupported content type",
+        };
         return;
       }
 
-      const balance = this.blockchain.getBalance();
+      const req = await body.json();
+      const address = req.address as string;
+      const balance = this.blockchain.getBalance(address);
+
       context.response.body = { balance: balance };
       context.response.status = 200;
     } catch (error) {
@@ -314,6 +365,33 @@ export class Node {
   }
 
   //TODO
-  async handleAddTransaction(context: any) {
-  }
+  // async handleAddTransaction(context: any) {
+  //   try {
+  //     const body = context.request.body;
+  //     if (body.type() === "json") {
+  //       context.response.status = 400;
+  //       context.response.body = {
+  //         message: "Unsupported content type",
+  //       };
+  //     } else {
+  //       const req = await body.json();
+  //       const mess = req as GenericMessage;
+  //       if (this.knownMessages.includes(mess.token)) {
+  //         return;
+  //       }
+  //       this.broadcast(mess, "/transactions");
+
+  //       const receivedTransaction = Transaction.fromJson(
+  //         JSON.parse(mess.content),
+  //       );
+  //     }
+  //     context.response.status = 200;
+  //   } catch (error) {
+  //     console.error("Error handling request:", error);
+  //     context.response.status = 500;
+  //     context.response.body = {
+  //       message: "Internal Server Error",
+  //     };
+  //   }
+  // }
 }

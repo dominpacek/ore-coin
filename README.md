@@ -35,6 +35,7 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 - [ ] Tworzenie transakcji w formacie json (lista w bloku)
 - [ ] Walidacja transakcji pod kątem double-spending
 - [ ] Obliczanie aktualnych sald na kontach
+- [ ] Osiągnięcie konsensusu (metoda proof-of-work)
 
 ### 4. Kopanie asynchroniczne (termin oddania: 10.01.2025)
 

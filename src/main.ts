@@ -11,7 +11,7 @@ let node: Node;
 if (import.meta.main) {
   // Create directory for user files (this is where the blockchain will be stored)
   try {
-    Deno.mkdirSync("../user-files");
+    Deno.mkdirSync("./user-files");
   } catch (e) {
     if (e instanceof Deno.errors.AlreadyExists) {
       // pass
@@ -97,33 +97,70 @@ if (import.meta.main) {
         });
       } else if (choice == "2") {
         wallet.addPrivateKey();
-        // TODO opcje 3 i 4
-      } 
-      else if(choice == "3") {
-          // TODO get blockchain
-          const blockchain = new Blockchain(undefined, 5, 10, "");
+      } else if (choice == "3") {
+        // TODO get blockchain
+        const blockchain = await Node.askForBlockchainFromPeer(
+          "http://localhost:5801",
+        );
 
-          const toAddress = prompt("Podaj adres odbiorcy: ");
-          if(toAddress == null) {
-            console.log("Nie podano adresu odbiorcy!!\n\n");
-            continue;
+        if (!blockchain) {
+          console.log("Couldn't download blockchain\n\n");
+          continue;
+        }
+
+        const toAddress = prompt("Podaj adres odbiorcy: ");
+        if (toAddress == null) {
+          console.log("Nie podano adresu odbiorcy!!\n\n");
+          continue;
+        }
+        console.log("Wybierz klucz prywatny: ");
+        wallet.keys.forEach((key, index) => {
+          console.log(
+            `[${index}] `,
+            key,
+            "\n",
+          );
+        });
+
+        const keyNumber: number = parseInt(prompt("Wybierz klucz: ") ?? "");
+        const fromKey = wallet.keys[keyNumber];
+
+        const amount = parseInt(prompt("Podaj kwotę: ") ?? "");
+        try {
+          const transaction = wallet.createTransaction(
+            toAddress,
+            fromKey,
+            amount,
+            blockchain,
+          );
+          console.log(transaction.toJson());
+        } catch (e) {
+          if (e instanceof Error) {
+            console.log("ERROR: ", e.message);
           }
-          console.log("Wybierz klucz prywatny: ");
-          wallet.keys.forEach((key, index) => {
-            console.log(
-              `[${index}] `,
-              key, '\n'
-            );
-          });
+          continue;
+        }
+      } else if (choice == "4") {
+        // TODO get blockchain
+        const blockchain = await Node.askForBlockchainFromPeer(
+          "http://localhost:5801",
+        );
 
-          const keyNumber: number = parseInt(prompt("Wybierz klucz: ") ?? "");
-          const fromKey = wallet.keys[keyNumber - 1];
+        if (!blockchain) {
+          console.log("Couldn't download blockchain\n\n");
+          continue;
+        }
 
-          const amount = parseInt(prompt("Podaj kwotę: ") ?? "");
-
-          wallet.createTransaction(toAddress, fromKey, amount, blockchain);
-      }
-      else if (choice == "Q") {
+        wallet.keys.forEach((key) => {
+          console.log(
+            "Public: ",
+            wallet.getPublicKey(key),
+            "\nSaldo: ",
+            blockchain.getBalance(wallet.getPublicKey(key)),
+            "\n\n",
+          );
+        });
+      } else if (choice == "Q") {
         wallet.saveWallet();
         exit();
       }
@@ -138,7 +175,7 @@ if (import.meta.main) {
   }
 
   try {
-    Deno.mkdirSync(`../user-files/${port}`);
+    Deno.mkdirSync(`./user-files/${port}`);
   } catch (e) {
     if (e instanceof Deno.errors.AlreadyExists) {
       // pass
@@ -147,7 +184,7 @@ if (import.meta.main) {
       Deno.exit(1);
     }
   }
-  const blockchainPath = `../user-files/${port}/`;
+  const blockchainPath = `./user-files/${port}/`;
 
   node = new Node(host, port, blockchainPath);
   flags.join.forEach((peer) => {
@@ -159,7 +196,7 @@ if (import.meta.main) {
 
   if (flags.init) {
     // TODO dodać adres dla coinbase
-    node.blockchain = new Blockchain(undefined);
+    node.blockchain = new Blockchain();
     node.blockchain.saveBlockChain(blockchainPath);
   } else if (flags.join) {
     await node.askForBlockchain();
@@ -171,10 +208,10 @@ if (import.meta.main) {
 
   if (flags.init) {
     while (true) {
-      node.mineBlock();
+      node.mineBlock("043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858");
       await sleep(5);
+      node.blockchain.saveBlockChain(blockchainPath);
     }
-    // node.blockchain.saveBlockChain(blockchainPath);
   }
 
   //console.log(`%cEnter message or "exit" to quit.`, "color: gray");

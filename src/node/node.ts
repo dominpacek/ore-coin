@@ -311,8 +311,13 @@ export class Node {
   }
 
   handleAddTransaction = (json: string) => {
-    // TODO
-    throw new Error("Not implemented yet.");
+    const transaction = Transaction.fromJson(JSON.parse(json));
+    if (transaction.isValid()) {
+      this.blockchain.addTransaction(transaction);
+      console.log(`💰 Received new transaction.`);
+    } else {
+      console.error(`❌ Received invalid transaction.`);
+    }
   };
 
   private logError(requestName: string, error: unknown) {

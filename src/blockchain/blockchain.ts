@@ -6,6 +6,7 @@ class Blockchain {
   blocks: Block[] = [];
   pendingTransactions: Transaction[] = []; // Transactions waiting to be mined
   unspentTransactions: Transaction[] = []; // Transactions that aren't spent and can be used as inputs to new transactions
+  // TODO properly update the transaction lists
 
   constructor() {
     this.blocks = [this.startGenesisBlock()];
@@ -36,6 +37,9 @@ class Blockchain {
     return newBlock;
   }
 
+  addTransaction(transaction: Transaction) {
+    this.pendingTransactions.push(transaction);
+  }
 
 
   saveBlockChain(path: string): void {

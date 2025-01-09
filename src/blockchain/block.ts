@@ -1,5 +1,6 @@
 import { Transaction } from "./transaction.ts";
 import { createHash } from "node:crypto";
+import { DIFFICULTY } from "../config.ts";
 
 class Block {
   index: number;
@@ -35,10 +36,10 @@ class Block {
       .digest("hex");
   }
 
-  mine(difficulty: number) {
+  mine() {
     console.log("Start mining...");
     // Keep mining the block until the hash matches the difficulty
-    while (!this.doesHashMatchDifficulty(difficulty)) {
+    while (!this.doesHashMatchDifficulty()) {
       this.nonce++;
       this.hash = this.toHash();
     }
@@ -60,20 +61,20 @@ class Block {
     );
   }
 
-  isValidAlone(difficulty: number): boolean {
+  isValidAlone(): boolean {
     // Validation method for the block by itself (disregarding the previous block)
     return this.isHashValid() &&
-      this.doesHashMatchDifficulty(difficulty) &&
+      this.doesHashMatchDifficulty() &&
       this.isTimestampValid();
   }
-  
-  isValid(previousBlock: Block, difficulty: number, verbose: boolean = false): boolean {
+
+  isValid(previousBlock: Block, verbose: boolean = false): boolean {
     // Complete validation method for the block considering the previous block.
     if (!this.isHashValid()) {
       if (verbose) console.log("Invalid hash.");
       return false;
     }
-    if (!this.doesHashMatchDifficulty(difficulty)) {
+    if (!this.doesHashMatchDifficulty()) {
       if (verbose) console.log("Hash does not match difficulty.");
       return false;
     }
@@ -101,11 +102,11 @@ class Block {
     return this.hash === this.toHash();
   }
 
-  private doesHashMatchDifficulty(difficulty: number): boolean {
+  private doesHashMatchDifficulty(): boolean {
     // Check if the hash of the block fulfills the difficulty requirement
     if (this.index === 0) return true; // Genesis block doesn't need to fulfill difficulty
 
-    return this.hash.startsWith(new Array(difficulty).fill(0).join(""));
+    return this.hash.startsWith(new Array(DIFFICULTY).fill(0).join(""));
   }
 
   private isTimestampValid(): boolean {

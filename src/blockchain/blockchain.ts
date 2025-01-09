@@ -3,7 +3,6 @@ import { Transaction, TxOut } from "../blockchain/transaction.ts";
 import { MINING_REWARD } from "../config.ts";
 
 class Blockchain {
-  difficulty: number = 4;
   blocks: Block[] = [];
   pendingTransactions: Transaction[] = []; // Transactions waiting to be mined
   unspentTransactions: Transaction[] = []; // Transactions that aren't spent and can be used as inputs to new transactions
@@ -33,7 +32,7 @@ class Blockchain {
       this.getLatestBlock().hash,
       this.getLatestBlock().index + 1,
     );
-    newBlock.mine(this.difficulty);
+    newBlock.mine();
     return newBlock;
   }
 
@@ -50,7 +49,6 @@ class Blockchain {
     const obj = JSON.parse(json);
     const blockchain = new Blockchain();
     blockchain.blocks = obj.blocks.map((block: object) => Block.fromJson(block));
-    blockchain.difficulty = obj.difficulty;
     blockchain.pendingTransactions = obj.pendingTransactions.map((tx: object) =>
       Transaction.fromJson(JSON.stringify(tx))
     );
@@ -77,7 +75,7 @@ class Blockchain {
       }
       // Validate the block
       const previousBlock = this.blocks[i - 1];
-      if (!currentlyCheckingBlock.isValid(previousBlock, this.difficulty, verbose)) {
+      if (!currentlyCheckingBlock.isValid(previousBlock, verbose)) {
         if (verbose) console.log(`Invalid block at id=${i}.`);
         return false;
       }
@@ -106,7 +104,7 @@ class Blockchain {
     // Check if the genesis block is as expected
     const expectedGenesisBlock = this.startGenesisBlock();
     return genesisBlock.toHash() === expectedGenesisBlock.toHash() &&
-      genesisBlock.isValidAlone(0);
+      genesisBlock.isValidAlone();
   }
 }
 

@@ -1,7 +1,7 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { exit } from "node:process";
 import { Blockchain } from "./blockchain/blockchain.ts";
-import { GenericMessage } from "./node/genericMessage.ts";
+import { BlockchainMessage } from "./node/blockchainMessage.ts";
 import { Wallet } from "./wallet/wallet.ts";
 import { Node } from "./node/node.ts";
 import { sleep } from "https://deno.land/x/sleep/mod.ts";
@@ -21,7 +21,7 @@ if (import.meta.main) {
     }
   }
 
-  console.log(`%cWitaj w Górniczej Dolinie! ⛏`, "color: blue");
+  console.log("%cWitaj w Górniczej Dolinie! ⛏", "color: blue");
 
   // TODO cleanup flags
   // add join flag, evil flag
@@ -235,7 +235,7 @@ async function readInput() {
     } else if (input.toLowerCase() === "peers") {
       console.log(`Peers: ${node.peers.join(", ")}`);
     } else {
-      await node.broadcast(new GenericMessage(input));
+      await node.broadcast(new BlockchainMessage(input));
     }
   }
 }

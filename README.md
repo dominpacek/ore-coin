@@ -32,18 +32,16 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 
 ### 3. Transakcje przekazania środków (termin oddania: 13.12.2024)
 
-- [ ] Tworzenie transakcji w formacie json (lista w bloku)
-- [ ] Walidacja transakcji pod kątem double-spending
-- [ ] Obliczanie aktualnych sald na kontach
-- [ ] Osiągnięcie konsensusu (metoda proof-of-work)
+- [ x ] Tworzenie transakcji w formacie json (lista w bloku)
+- [ x ] Walidacja transakcji pod kątem double-spending
+- [ x ] Obliczanie aktualnych sald na kontach
+- [ x ] Osiągnięcie konsensusu (metoda proof-of-work)
 
 ### 4. Kopanie asynchroniczne (termin oddania: 10.01.2025)
 
-- [ ] Obsługa orphan block
-  - sytuacja, kiedy dostajemy nowy blok ale nie dostaliśmy jeszcze jego rodzica (dopytać się pozostałych node "hej, pokaż cały blockchain bo ja nie mam przodka tego bloku")
-- [ ] Obsługa forków
-  - sytuacja, kiedy dwa node wykopią blok w mniej więcej tym samym czasie
-- [ ] Tworzenie forków przez złośliwego node
+- [ x ] Obsługa orphan block
+- [ x ] Obsługa forków
+- [ x ] Tworzenie forków przez złośliwego node
 
 ### 5. Sprawozdanie końcowe (termin oddania: 24.01.2025)
 

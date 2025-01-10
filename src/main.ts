@@ -10,7 +10,6 @@ if (import.meta.main) {
     string: ["host", "port", "join"],
     collect: ["join"],
     default: {
-      init: false,
       host: "localhost",
       port: "5801",
     },
@@ -39,6 +38,8 @@ if (import.meta.main) {
     }
   }
 
+  let node: Node;
+  if (!flags.lazy) {
   const filename: string = prompt(
     'Enter the wallet name containing key for your reward ["wallet.json"]: ',
     "wallet.json",
@@ -77,12 +78,20 @@ if (import.meta.main) {
     Deno.exit(1);
   }
 
-  const node = new Node(
+  node = new Node(
     host,
     port,
     blockchainPath,
     rewardAddress,
   );
+} else {
+  node = new Node(
+    host,
+    port,
+    blockchainPath,
+    "null",
+  );
+}
 
   // Connect to peers
   flags.join.forEach((peer) => {

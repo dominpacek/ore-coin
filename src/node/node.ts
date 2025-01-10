@@ -5,7 +5,7 @@ import { Block } from "../blockchain/block.ts";
 import { Transaction } from "../blockchain/transaction.ts";
 import { Blockchain } from "../blockchain/blockchain.ts";
 import { BlockchainMessage } from "./blockchainMessage.ts";
-const debug_write_messages = false;
+const debug_write_messages = true;
 
 export class Node {
   address: string;
@@ -69,7 +69,7 @@ export class Node {
           "color: #c6b0e8",
         );
         this.addBlock(this.currentlyMinedBlock);
-        this.broadcastBlock(this.currentlyMinedBlock);
+        // this.broadcastBlock(this.currentlyMinedBlock);
       } catch (error) {
         console.error("Error during mining:", error);
       }
@@ -166,7 +166,7 @@ export class Node {
         const receivedBlockchainLength = obj.blocks.length;
         if (receivedBlockchainLength > longestBlockchainLength) { // Choose the longest blockchain (tiebreaker: received first)
           const receivedBlockchain = Blockchain.fromJson(JSON.stringify(obj));
-          if (!receivedBlockchain.isValid()) {
+          if (!receivedBlockchain.isValid(true)) {
             continue; // Ignore invalid blockchains
           }
           longestBlockchainLength = receivedBlockchainLength;
@@ -178,16 +178,22 @@ export class Node {
     }
 
     if (longestBlockchain) {
-      this.blockchain = longestBlockchain;
+      if (!this.blockchain) {
+        this.blockchain = longestBlockchain;
+      }
+      else {
+        this.blockchain.replaceBlockchain(longestBlockchain);
+      }
       console.log(
         `%cFetched blockchain ${this.blockchain.blocks.length}bl long.`,
         "color: green",
       );
     } else {
-      console.log(
-        "No valid blockchain received from peers, starting genesis block.",
-      );
-      this.blockchain = new Blockchain();
+      console.log("No valid blockchain received from peers.");
+      if (!this.blockchain) {
+        this.blockchain = new Blockchain();
+        console.log("Starting genesis block.")
+      }
     }
   }
 
@@ -240,13 +246,13 @@ export class Node {
         context.response.type = "application/json";
       })
       .post("/blockchain/add_block", (context) => {
-        this.handleBlockchainMessage(context, this.addBlockHandler);
+        this.handleBlockchainMessage(context, this.addBlockHandler, '/blockchain/add_block');
       })
       .get("/transactions/balance", (context) => {
         this.handleGetBalance(context);
       })
       .post("/transactions", (context) => {
-        this.handleBlockchainMessage(context, this.handleAddTransaction);
+        this.handleBlockchainMessage(context, this.handleAddTransaction, '/transactions');
       });
 
     const app = new Application();
@@ -259,7 +265,9 @@ export class Node {
   async handleBlockchainMessage(
     context: any,
     callbackRequestHandler: (content: string) => void,
+    endpoint: string
   ) {
+    console.log()
     // Handles BlockchainMessage requests using the provided callback function
     // Used for requests that need to be rebroadcasted to peers
     try {
@@ -276,6 +284,7 @@ export class Node {
       if (this.knownMessages.includes(mess.token)) {
         // If message was already received, ignore it and don't broadcast
       } else {
+        this.knownMessages.push(mess.token);
         // If message was not received before, broadcast it to peers and handle it
         if (debug_write_messages) {
           console.log(
@@ -283,7 +292,7 @@ export class Node {
             mess,
           );
         }
-        this.broadcast(mess);
+        this.broadcast(mess, endpoint);
         callbackRequestHandler(mess.content);
       }
     } catch (error) {

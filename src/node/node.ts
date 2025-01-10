@@ -5,7 +5,7 @@ import { Block } from "../blockchain/block.ts";
 import { Transaction } from "../blockchain/transaction.ts";
 import { Blockchain } from "../blockchain/blockchain.ts";
 import { BlockchainMessage } from "./blockchainMessage.ts";
-const debug_write_messages = true;
+const debug_write_messages = false;
 
 export class Node {
   address: string;
@@ -22,7 +22,12 @@ export class Node {
   currentlyMining: boolean = false;
   currentlyMinedBlock: Block | null = null;
 
-  constructor(address: string, port: number, blockchainPath: string, rewardAddress: string) {
+  constructor(
+    address: string,
+    port: number,
+    blockchainPath: string,
+    rewardAddress: string,
+  ) {
     this.address = address;
     this.port = port;
     this.blockchainPath = blockchainPath;
@@ -58,7 +63,9 @@ export class Node {
     while (this.currentlyMining) {
       try {
         console.log(`%cStart mining...`, "color: #c6b0e8");
-        this.currentlyMinedBlock = this.blockchain.createNextBlock(this.rewardAddress);
+        this.currentlyMinedBlock = this.blockchain.createNextBlock(
+          this.rewardAddress,
+        );
         const success = await this.currentlyMinedBlock.mine();
         if (!success) {
           console.log("%cMining aborted.", "color: #c6b0e8");
@@ -69,7 +76,7 @@ export class Node {
           "color: #c6b0e8",
         );
         this.addBlock(this.currentlyMinedBlock);
-        // this.broadcastBlock(this.currentlyMinedBlock);
+        this.broadcastBlock(this.currentlyMinedBlock);
       } catch (error) {
         console.error("Error during mining:", error);
       }
@@ -98,12 +105,12 @@ export class Node {
     endpoint: string = "/node/add_message",
   ) {
     this.knownMessages.push(message.token);
-    if (debug_write_messages) {
-      console.log(
-        `📡 %cBroadcasting message ${message.token} to ${this.peers.length} peers.`,
-        "color: orange",
-      );
-    }
+
+    console.log(
+      `📡 %cBroadcasting message ${message.token} to ${this.peers.length} peers.`,
+      "color: orange",
+    );
+
     await Promise.all(this.peers.map(async (peer) => {
       try {
         await this.send(message, peer, endpoint); // Run all `send` calls concurrently
@@ -127,7 +134,7 @@ export class Node {
       body: JSON.stringify(message),
     });
     const _resp = await fetch(req);
-    // console.log("response: ", resp);
+    console.log("response: ", _resp);
   }
 
   public addPeer(url: string, greet?: boolean) {
@@ -180,8 +187,7 @@ export class Node {
     if (longestBlockchain) {
       if (!this.blockchain) {
         this.blockchain = longestBlockchain;
-      }
-      else {
+      } else {
         this.blockchain.replaceBlockchain(longestBlockchain);
       }
       console.log(
@@ -192,7 +198,7 @@ export class Node {
       console.log("No valid blockchain received from peers.");
       if (!this.blockchain) {
         this.blockchain = new Blockchain();
-        console.log("Starting genesis block.")
+        console.log("Starting genesis block.");
       }
     }
   }
@@ -214,7 +220,8 @@ export class Node {
 
   static async postTransactionToPeer(peer: string, transaction: Transaction) {
     const message = new BlockchainMessage(transaction.toJson());
-    const req = new Request(peer + "/transactions", {
+    const endpoint = "/transactions";
+    const req = new Request(peer + endpoint, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -222,6 +229,7 @@ export class Node {
       body: JSON.stringify(message),
     });
     const _resp = await fetch(req);
+    console.log("response: ", _resp);
   }
 
   public broadcastBlock(block: Block) {
@@ -246,13 +254,23 @@ export class Node {
         context.response.type = "application/json";
       })
       .post("/blockchain/add_block", (context) => {
-        this.handleBlockchainMessage(context, this.addBlockHandler, '/blockchain/add_block');
+        this.handleBlockchainMessage(
+          context,
+          this.addBlockHandler,
+          "/blockchain/add_block",
+        );
       })
       .get("/transactions/balance", (context) => {
+        console.log("transactino");
         this.handleGetBalance(context);
       })
       .post("/transactions", (context) => {
-        this.handleBlockchainMessage(context, this.handleAddTransaction, '/transactions');
+        console.log("ENDPOINT TRANSAKCJA!!");
+        this.handleBlockchainMessage(
+          context,
+          this.handleAddTransaction,
+          "/transactions",
+        );
       });
 
     const app = new Application();
@@ -265,9 +283,9 @@ export class Node {
   async handleBlockchainMessage(
     context: any,
     callbackRequestHandler: (content: string) => void,
-    endpoint: string
+    endpoint: string,
   ) {
-    console.log()
+    console.log(`handleBlockchainMessage handler: ${callbackRequestHandler.name}`);
     // Handles BlockchainMessage requests using the provided callback function
     // Used for requests that need to be rebroadcasted to peers
     try {
@@ -386,7 +404,7 @@ export class Node {
   }
 
   handleAddTransaction = (json: string) => {
-    console.log(`📥 Received new transaction.`);
+    console.log(`📥 %cReceived new transaction.`, "color:red");
     const transaction = Transaction.fromJson(json);
     console.log(transaction);
     if (transaction.isValid(true)) {

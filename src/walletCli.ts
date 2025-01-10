@@ -109,7 +109,7 @@ if (import.meta.main) {
                     amount,
                     blockchain,
                 );
-                Node.postTransactionToPeer(peer, transaction);
+                await Node.postTransactionToPeer(peer, transaction);
                 console.log(transaction.toJson());
             } catch (e) {
                 if (e instanceof Error) {

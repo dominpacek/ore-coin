@@ -58,11 +58,16 @@ export class Node {
     this.knownMessages.push(message.token);
     if (debug_write_messages) {
       console.log(
-        `📡 %cBroadcasting message ${message.token} to ${this.peers.length} peers.`, "color: orange",
+        `📡 %cBroadcasting message ${message.token} to ${this.peers.length} peers.`,
+        "color: orange",
       );
     }
     await Promise.all(this.peers.map(async (peer) => {
-      await this.send(message, peer, endpoint); // Run all `send` calls concurrently
+      try {
+        await this.send(message, peer, endpoint); // Run all `send` calls concurrently
+      } catch (_error) {
+        // Ignore connection errors
+      }
     }));
   }
 
@@ -133,7 +138,8 @@ export class Node {
     if (longestBlockchain) {
       this.blockchain = longestBlockchain;
       console.log(
-        `%cFetched blockchain ${this.blockchain.blocks.length}bl long.`, "color: green",
+        `%cFetched blockchain ${this.blockchain.blocks.length}bl long.`,
+        "color: green",
       );
     } else {
       console.log(
@@ -160,7 +166,10 @@ export class Node {
 
   public broadcastBlock(block: Block) {
     const message = new BlockchainMessage(JSON.stringify(block));
-    console.log(`📡: %cBroadcasting mined block (id=${block.index}).`, "color: orange");
+    console.log(
+      `📡: %cBroadcasting mined block (id=${block.index}).`,
+      "color: orange",
+    );
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }
@@ -273,13 +282,15 @@ export class Node {
       }
       this.addBlock(receivedBlock);
       console.log(
-        `🔳 %cReceived new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`, "color: green"
+        `🔳 %cReceived new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`,
+        "color: green",
       );
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
       if (receivedBlock.isValid()) {
         console.log(
-          `⬛ %cReceived new 'orphan' block, requesting full blockchain.`, "color: green",
+          `⬛ %cReceived new 'orphan' block, requesting full blockchain.`,
+          "color: green",
         );
         this.askForBlockchain();
       } else {

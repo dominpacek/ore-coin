@@ -1,6 +1,6 @@
 import elliptic from "npm:elliptic";
 import { createHash } from "node:crypto";
-import {  verifySignature } from "../wallet/cryptographyUtils.ts";
+import { verifySignature } from "../wallet/cryptographyUtils.ts";
 import { randomBytes } from "node:crypto";
 import { MINING_REWARD } from "../config.ts";
 
@@ -38,13 +38,15 @@ export class Transaction {
       .digest("hex");
   }
 
-  isValid(): boolean {
+  isValid(verbose: boolean = false): boolean {
     if (this.hash !== this.calculateHash()) {
-      console.error(`Transaction not valid: Invalid transaction hash`);
+      if (verbose) {
+        console.error(`Transaction not valid: Invalid transaction hash`);
+      }
       return false;
     }
 
-    this.inputs.forEach((txInput) => {
+    for (const txInput of this.inputs) {
       const txInputHash = txInput.toHash();
       const isValidSignature = verifySignature(
         txInput.address,
@@ -53,12 +55,14 @@ export class Transaction {
       );
 
       if (!isValidSignature) {
-        console.error(
-          `Invalid transaction input signature '${JSON.stringify(txInput)}'`,
-        );
+        if (verbose) {
+          console.error(
+            `Invalid transaction input signature '${JSON.stringify(txInput)}'`,
+          );
+        }
         return false;
       }
-    });
+    }
 
     if (this.type === "regular") {
       const totalInputAmount = this.inputs.reduce(
@@ -71,26 +75,45 @@ export class Transaction {
       );
 
       if (totalInputAmount !== totalOutputAmount) {
-        console.error(
-          `Invalid transaction: total input amount ${totalInputAmount} is not equal to total output amount ${totalOutputAmount}`,
-        );
+        if (verbose) {
+          console.error(
+            `Invalid transaction: total input amount ${totalInputAmount} is not equal to total output amount ${totalOutputAmount}`,
+          );
+        }
         return false;
       }
-    }
-
-    if (this.type === "reward") {
+    } else if (this.type === "reward") {
       if (this.outputs.length !== 1) {
-        console.error(
-          `Invalid transaction: reward transaction should have exactly one output`,
-        );
+        if (verbose) {
+          console.error(
+            `Invalid transaction: reward transaction should have exactly one output`,
+          );
+        }
         return false;
       }
       if (this.outputs[0].amount !== MINING_REWARD) {
-        console.error(
-          `Invalid transaction: reward transaction should have 50 coins`,
-        );
+        if (verbose) {
+          console.error(
+            `Invalid transaction: reward transaction should have 50 coins`,
+          );
+        }
         return false;
       }
+      if (this.inputs.length !== 0) {
+        if (verbose) {
+          console.error(
+            `Invalid transaction: reward transaction should have no inputs`,
+          );
+        }
+        return false;
+      }
+    } else {
+      if (verbose) {
+        console.error(
+          `Invalid transaction: unknown transaction type '${this.type}'`,
+        );
+      }
+      return false;
     }
 
     return true;

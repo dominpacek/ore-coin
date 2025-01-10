@@ -61,15 +61,8 @@ class Block {
     );
   }
 
-  isValidAlone(): boolean {
-    // Validation method for the block by itself (disregarding the previous block)
-    return this.isHashValid() &&
-      this.doesHashMatchDifficulty() &&
-      this.isTimestampValid();
-  }
-
-  isValid(previousBlock: Block, verbose: boolean = false): boolean {
-    // Complete validation method for the block considering the previous block.
+  isValid(verbose: boolean = false): boolean {
+    // Basic validation method for the block
     if (!this.isHashValid()) {
       if (verbose) console.log("Invalid hash.");
       return false;
@@ -80,18 +73,6 @@ class Block {
     }
     if (!this.isTimestampValid()) {
       if (verbose) console.log("Invalid timestamp.");
-      return false;
-    }
-    if (this.previousHash !== previousBlock.hash) {
-      if (verbose) console.log("Previous hash does not match.");
-      return false;
-    }
-    if (this.index !== previousBlock.index + 1) {
-      if (verbose) console.log("Invalid index.");
-      return false;
-    }
-    if (this.timestamp <= previousBlock.timestamp) {
-      if (verbose) console.log("Timestamp is not greater than previous block's timestamp.");
       return false;
     }
     return true;

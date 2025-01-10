@@ -266,7 +266,7 @@ export class Node {
     } else if (receivedBlock.index == latestIndex + 1) {
       // Block ready to be added to the chain
       if (
-        !receivedBlock.isValid(latestBlock, true)
+        !this.blockchain.isNewBlockValid(receivedBlock, true)
       ) {
         console.error(`❌ Received invalid block.`);
         return;
@@ -277,7 +277,7 @@ export class Node {
       );
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
-      if (receivedBlock.isValidAlone()) {
+      if (receivedBlock.isValid()) {
         console.log(
           `⬛ Received new 'orphan' block, requesting full blockchain.`,
         );

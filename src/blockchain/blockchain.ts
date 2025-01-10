@@ -72,22 +72,93 @@ class Blockchain {
     for (let i = 1; i < this.blocks.length; i++) {
       const currentlyCheckingBlock = this.blocks[i];
 
-      // Check if the index is correct
-      if (currentlyCheckingBlock.index !== i) {
-        if (verbose) console.log(`Expected block id=${i}, got ${currentlyCheckingBlock.index}.`);
-        return false;
-      }
-      // Validate the block
+      // Validate the block with regard to the previous block
       const previousBlock = this.blocks[i - 1];
-      if (!currentlyCheckingBlock.isValid(previousBlock, verbose)) {
+      if (
+        !this.validateBlockAgainstPreviousBlock(
+          currentlyCheckingBlock,
+          previousBlock,
+          verbose,
+        )
+      ) {
         if (verbose) console.log(`Invalid block at id=${i}.`);
         return false;
       }
     }
 
-    // TODO validate transactions after they're implemented
-
     if (verbose) console.log("Blockchain is valid");
+    return true;
+  }
+
+  isNewBlockValid(newBlock: Block, verbose: boolean = false): boolean {
+    // Validate whether new block is valid and can be added to the blockchain
+
+    const latestBlock = this.getLatestBlock();
+    return this.validateBlockAgainstPreviousBlock(
+      newBlock,
+      latestBlock,
+      verbose,
+    );
+  }
+
+  private validateBlockAgainstPreviousBlock(
+    nextBlock: Block,
+    previousBlock: Block,
+    verbose: boolean = false,
+  ): boolean {
+    // Validate if the block is really the next block in the chain
+    if (nextBlock.index !== previousBlock.index + 1) {
+      if (verbose) console.log("Invalid index.");
+      return false;
+    }
+    if (nextBlock.previousHash !== previousBlock.hash) {
+      if (verbose) console.log("Previous hash does not match.");
+      return false;
+    }
+
+    // Validate block properties
+    if (!nextBlock.isValid(verbose)) {
+      return false;
+    }
+    if (nextBlock.timestamp <= previousBlock.timestamp) {
+      if (verbose) {
+        console.log(
+          "Timestamp is not greater than previous block's timestamp.",
+        );
+      }
+      return false;
+    }
+
+    // Validate transactions
+    // TODO : big TODO for all this transaction validation stuff
+    for (const tx of nextBlock.transactions) {
+      if (!tx.isValid(verbose)) {
+        return false;
+      }
+      // Check if transaction is unspent     
+    }
+    
+    // Check if all used transaction inputs sum to 0?
+
+    // Check if there's only one reward transaction
+    const rewardTransactions = nextBlock.transactions.filter(
+      (tx) => tx.type === "reward",
+    );
+    if (rewardTransactions.length !== 1) {
+      if (verbose) {
+        console.log(`Invalid number of reward transactions: ${rewardTransactions.length} should be 1.`);
+      }
+      return false;
+    }
+
+    // Check double spending
+    // TODO jak to robić??? trzeba po prostu sprawdzać czy 2 razy nie wystepuje ten sam txin ale ich nie rozumiem
+    // const allTransactions = [...previousBlock.transactions, ...nextBlock.transactions];
+    // const allOutputs = allTransactions.map((tx) => tx.outputs).flat();
+    // const allInputs = allTransactions.map((tx) => tx.inputs).flat();
+    // const allInputTxIds = allInputs.map((input) => input.txId);
+    // const allOutputTxIds = allOutputs.map((output) => output.txId);
+
     return true;
   }
 
@@ -98,17 +169,20 @@ class Blockchain {
   }
 
   getBalance(address: string): number {
-    const unspentTransactionsForAddress = this.getUnspentTransactionsForAddress(address);
+    const unspentTransactionsForAddress = this.getUnspentTransactionsForAddress(
+      address,
+    );
     return unspentTransactionsForAddress.reduce((balance, tx) => {
-      return balance + tx.outputs.reduce((balance, output) => balance + output.amount, 0);
+      return balance +
+        tx.outputs.reduce((balance, output) => balance + output.amount, 0);
     }, 0);
   }
-  
+
   private validateGenesisBlock(genesisBlock: Block): boolean {
     // Check if the genesis block is as expected
     const expectedGenesisBlock = this.startGenesisBlock();
     return genesisBlock.toHash() === expectedGenesisBlock.toHash() &&
-      genesisBlock.isValidAlone();
+      genesisBlock.isValid();
   }
 }
 

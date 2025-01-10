@@ -377,13 +377,14 @@ export class Node {
   }
 
   handleAddTransaction = (json: string) => {
-    console.log(json);
+    console.log(`📥 Received new transaction.`);
     const transaction = Transaction.fromJson(json);
-    if (transaction.isValid()) {
+    console.log(transaction);
+    if (transaction.isValid(true)) {
       this.blockchain.addTransaction(transaction);
-      console.log(`💰 Received new transaction.`);
+      console.log(`✅ Added transaction to pending transactions.`);
     } else {
-      console.error(`❌ Received invalid transaction.`);
+      console.error(`❌ Transacion is invalid. Ignoring.`);
     }
   };
 

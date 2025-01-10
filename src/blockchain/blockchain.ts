@@ -22,11 +22,10 @@ class Blockchain {
 
   createNextBlock(rewardAddress: string): Block {
     let transactions = this.pendingTransactions;
-    // this.pendingTransactions = [];
+    this.pendingTransactions = [];
     const coinbase = Transaction.newCoinbaseTx(rewardAddress, MINING_REWARD);
     this.unspentTransactions.push(coinbase);
     transactions = [coinbase, ...transactions];
-
     const newBlock = new Block(
       Date.now(),
       transactions,
@@ -43,6 +42,7 @@ class Blockchain {
 
   addTransaction(transaction: Transaction) {
     this.pendingTransactions.push(transaction);
+    this.unspentTransactions.push(transaction);
   }
 
   saveBlockchain(path: string): void {
@@ -125,6 +125,7 @@ class Blockchain {
     if (!nextBlock.isValid(verbose)) {
       return false;
     }
+    console.log("Block is valid");
     if (nextBlock.timestamp <= previousBlock.timestamp) {
       if (verbose) {
         console.log(
@@ -181,7 +182,7 @@ class Blockchain {
     );
     return unspentTransactionsForAddress.reduce((balance, tx) => {
       return balance +
-        tx.outputs.reduce((balance, output) => balance + output.amount, 0);
+        tx.outputs.reduce((balance, output) => output.address == address ? balance + output.amount : balance, 0);
     }, 0);
   }
 

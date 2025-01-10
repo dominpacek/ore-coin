@@ -71,9 +71,12 @@ if (import.meta.main) {
         } else if (choice == "2") {
             wallet.addPrivateKey();
         } else if (choice == "3") {
-            // TODO prompt for peer port
+            const port = prompt("Enter peer port: ", "5801") ?? "5801";   
+            
+            const peer = "http://localhost:" + port;
+
             const blockchain = await Node.askForBlockchainFromPeer(
-                "http://localhost:5801",
+                peer
             );
 
             if (!blockchain) {
@@ -106,6 +109,7 @@ if (import.meta.main) {
                     amount,
                     blockchain,
                 );
+                Node.postTransactionToPeer(peer, transaction);
                 console.log(transaction.toJson());
             } catch (e) {
                 if (e instanceof Error) {
@@ -114,8 +118,10 @@ if (import.meta.main) {
                 continue;
             }
         } else if (choice == "4") {
+            const port = prompt("Enter peer port: ", "5801") ?? "5801"; 
+
             const blockchain = await Node.askForBlockchainFromPeer(
-                "http://localhost:5801",
+                "http://localhost:" + port,
             );
 
             if (!blockchain) {

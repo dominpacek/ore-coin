@@ -13,10 +13,10 @@ export class Transaction {
 
   constructor(TxIns: TxIn[], TxOuts: TxOut[]) {
     this.id = randomBytes(Math.floor(32)).toString("hex");
-    this.hash = "";
     this.type = "regular";
     this.inputs = TxIns;
     this.outputs = TxOuts;
+    this.hash = this.calculateHash();
   }
 
   static newCoinbaseTx(address: string, reward: number): Transaction {
@@ -41,7 +41,9 @@ export class Transaction {
   isValid(verbose: boolean = false): boolean {
     if (this.hash !== this.calculateHash()) {
       if (verbose) {
-        console.error(`Transaction not valid: Invalid transaction hash`);
+        console.error(
+          `Transaction not valid: Invalid transaction hash ${this.hash} !== ${this.calculateHash()}`,
+        );
       }
       return false;
     }
@@ -182,11 +184,13 @@ export class TxIn {
   }
 
   static fromJson(json: any): TxIn {
-    return new TxIn(
+    const txin = new TxIn(
       json.txOutId,
       json.txOutIndex,
       json.amount,
       json.address,
     );
+    txin.signature = json.signature;
+    return txin;
   }
 }

@@ -52,6 +52,15 @@ Program wypisuje wiadomości log na konsoli pokolorowane w następujący sposób
 - żółte - wiadomości wychodzące
 - fioletowe - kopanie
 
+Flagi main.ts:
+- `host` - adres hosta
+- `port` / `p` - port na jakim ma działać node
+- `join [http://HOST:PORT]` - adres peera do jakiego node ma się połączyć (można podać wiele) 
+- `lazy` - node nie będzie kopał
+- `load` - wczytaj blockchain z pliku
+
+Pliki przechowywane są w folderze `./user-files/[PORT]` - oddzielnie dla każdego node.
+
 ## Node
 
 Węzeł sieci. Udostępnia serwer HTTP z endpointami:

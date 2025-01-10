@@ -32,7 +32,7 @@ class Wallet {
     return privateKey;
   }
 
-  getPublicKey(private_key: string) {
+  static getPublicKey(private_key: string) {
     const key = EC.keyFromPrivate(private_key, "hex");
     return key.getPublic().encode("hex");
   }
@@ -70,14 +70,14 @@ class Wallet {
     if (!this.keys.includes(fromKey)) {
       throw new Error("Key not found in your wallet: " + fromKey);
     }
-    if (amount > blockchain.getBalance(this.getPublicKey(fromKey))) {
+    if (amount > blockchain.getBalance(Wallet.getPublicKey(fromKey))) {
       throw new Error(
         "Insufficient funds: " +
-          blockchain.getBalance(this.getPublicKey(fromKey)),
+          blockchain.getBalance(Wallet.getPublicKey(fromKey)),
       );
     }
 
-    const fromAddress = this.getPublicKey(fromKey);
+    const fromAddress = Wallet.getPublicKey(fromKey);
 
     const txIns: TxIn[] = [];
     const txOuts: TxOut[] = [new TxOut(toAddress, amount)];

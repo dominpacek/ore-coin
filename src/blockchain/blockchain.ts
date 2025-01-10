@@ -35,14 +35,22 @@ class Blockchain {
     return newBlock;
   }
 
-  addBlock (newBlock: Block) {
+  addBlock(newBlock: Block) {
     this.blocks.push(newBlock);
     // TODO tutaj usuwanie zrobionych transakcji z pending transactions
+
   }
 
   addTransaction(transaction: Transaction) {
     this.pendingTransactions.push(transaction);
     this.unspentTransactions.push(transaction);
+
+    // Remove spent transactions
+    this.unspentTransactions = this.unspentTransactions.filter((tx) => {
+      return !transaction.inputs.some((input) => {
+        return input.txOutId === tx.id;
+      });
+    });
   }
 
   saveBlockchain(path: string): void {
@@ -141,9 +149,15 @@ class Blockchain {
       if (!tx.isValid(verbose)) {
         return false;
       }
-      // Check if transaction is unspent     
+      // Check if transaction is unspent
+      if (!this.unspentTransactions.includes(tx)) {
+        if (verbose) {
+          console.log("Transaction is not unspent.");
+        }
+        return false;
+      }
     }
-    
+
     // Check if all used transaction inputs sum to 0?
 
     // Check if there's only one reward transaction
@@ -160,12 +174,21 @@ class Blockchain {
     }
 
     // Check double spending
-    // TODO jak to robić??? trzeba po prostu sprawdzać czy 2 razy nie wystepuje ten sam txin ale ich nie rozumiem
-    // const allTransactions = [...previousBlock.transactions, ...nextBlock.transactions];
-    // const allOutputs = allTransactions.map((tx) => tx.outputs).flat();
-    // const allInputs = allTransactions.map((tx) => tx.inputs).flat();
-    // const allInputTxIds = allInputs.map((input) => input.txId);
-    // const allOutputTxIds = allOutputs.map((output) => output.txId);
+    const allTransactions = [
+      ...previousBlock.transactions,
+      ...nextBlock.transactions,
+    ];
+
+    const allInputTxIds = allTransactions.map((tx) =>
+      tx.inputs.map((input) => input.txOutId + input.txOutIndex)
+    ).flat();
+    // check if there are any duplicates
+    if (new Set(allInputTxIds).size !== allInputTxIds.length) {
+      if (verbose) {
+        console.log("Double spending detected.");
+      }
+      return false;
+    }
 
     return true;
   }
@@ -182,7 +205,11 @@ class Blockchain {
     );
     return unspentTransactionsForAddress.reduce((balance, tx) => {
       return balance +
-        tx.outputs.reduce((balance, output) => output.address == address ? balance + output.amount : balance, 0);
+        tx.outputs.reduce(
+          (balance, output) =>
+            output.address == address ? balance + output.amount : balance,
+          0,
+        );
     }, 0);
   }
 

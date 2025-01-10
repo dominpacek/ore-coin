@@ -64,7 +64,7 @@ if (import.meta.main) {
                     "Private: ",
                     key,
                     "\nPublic: ",
-                    wallet.getPublicKey(key),
+                    Wallet.getPublicKey(key),
                     "\n\n",
                 );
             });
@@ -132,9 +132,9 @@ if (import.meta.main) {
             wallet.keys.forEach((key) => {
                 console.log(
                     "Public: ",
-                    wallet.getPublicKey(key),
+                    Wallet.getPublicKey(key),
                     "\nBalance: ",
-                    blockchain.getBalance(wallet.getPublicKey(key)),
+                    blockchain.getBalance(Wallet.getPublicKey(key)),
                     "\n\n",
                 );
             });

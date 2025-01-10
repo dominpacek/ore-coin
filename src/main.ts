@@ -55,7 +55,7 @@ if (import.meta.main) {
     wallet.keys.forEach((key, index) => {
       console.log(
         `[${index}] `,
-        wallet.getPublicKey(key),
+        Wallet.getPublicKey(key),
         "\n",
       );
     });
@@ -66,7 +66,7 @@ if (import.meta.main) {
       console.error("Invalid key index");
       Deno.exit(1);
     }
-    rewardAddress = wallet.getPublicKey(wallet.keys[keyIndex]);
+    rewardAddress = Wallet.getPublicKey(wallet.keys[keyIndex]);
 
   } catch (e) {
     if (e instanceof Error) {

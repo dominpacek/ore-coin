@@ -108,6 +108,7 @@ class Wallet {
     }
 
     const transaction = new Transaction(txIns, txOuts);
+    transaction.hash = transaction.calculateHash();
 
     return transaction;
   }

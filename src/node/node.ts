@@ -206,6 +206,18 @@ export class Node {
     }
   }
 
+  static async postTransactionToPeer(peer: string, transaction: Transaction) {
+    const message = new BlockchainMessage(transaction.toJson());
+    const req = new Request(peer + "/transactions", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
+    const _resp = await fetch(req);
+  }
+
   public broadcastBlock(block: Block) {
     const message = new BlockchainMessage(JSON.stringify(block));
     console.log(
@@ -365,7 +377,8 @@ export class Node {
   }
 
   handleAddTransaction = (json: string) => {
-    const transaction = Transaction.fromJson(JSON.parse(json));
+    console.log(json);
+    const transaction = Transaction.fromJson(json);
     if (transaction.isValid()) {
       this.blockchain.addTransaction(transaction);
       console.log(`💰 Received new transaction.`);

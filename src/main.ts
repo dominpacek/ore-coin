@@ -134,6 +134,11 @@ if (import.meta.main) {
             blockchain,
           );
           console.log(transaction.toJson());
+          console.log(transaction.isValid());
+
+          await Node.postTransactionToPeer("http://localhost:5801", transaction);
+
+
         } catch (e) {
           if (e instanceof Error) {
             console.log("ERROR: ", e.message);

@@ -44,13 +44,6 @@ class Blockchain {
   addTransaction(transaction: Transaction) {
     this.pendingTransactions.push(transaction);
     this.unspentTransactions.push(transaction);
-
-    // Remove spent transactions
-    this.unspentTransactions = this.unspentTransactions.filter((tx) => {
-      return !transaction.inputs.some((input) => {
-        return input.txOutId === tx.id;
-      });
-    });
   }
 
   saveBlockchain(path: string): void {
@@ -133,7 +126,6 @@ class Blockchain {
     if (!nextBlock.isValid(verbose)) {
       return false;
     }
-    console.log("Block is valid");
     if (nextBlock.timestamp <= previousBlock.timestamp) {
       if (verbose) {
         console.log(

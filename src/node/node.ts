@@ -10,20 +10,23 @@ const debug_write_messages = false;
 export class Node {
   address: string;
   port: number;
+  rewardAddress: string;
+  blockchainPath: string;
 
   peers: string[] = []; // List of peer URLs
   knownMessages: string[] = []; // Remember received messages
 
   blockchain!: Blockchain;
-  localFilesPath: string;
 
-  mining: boolean = false;
+  isMiner: boolean = false; // Node will never mine if false - used for testing
+  currentlyMining: boolean = false;
   currentlyMinedBlock: Block | null = null;
 
-  constructor(address: string, port: number, file_path: string) {
+  constructor(address: string, port: number, blockchainPath: string, rewardAddress: string) {
     this.address = address;
     this.port = port;
-    this.localFilesPath = file_path;
+    this.blockchainPath = blockchainPath;
+    this.rewardAddress = rewardAddress;
 
     this.runHttpServer();
     console.log(`💎 Listening on ${this.getUrl()}`);
@@ -33,26 +36,32 @@ export class Node {
     return `http://${this.address}:${this.port}`;
   }
 
-  startMining(rewardAddress: string, blockchainPath: string) {
-    this.mining = true;
-    this.mineBlock(rewardAddress, blockchainPath);
+  setMiner(isMiner: boolean) {
+    this.isMiner = isMiner;
+  }
+
+  startMining() {
+    if (!this.isMiner) return;
+    this.currentlyMining = true;
+    this.mineBlock();
   }
 
   stopMining() {
-    this.mining = false;
+    if (!this.isMiner) return;
+    this.currentlyMining = false;
     if (this.currentlyMinedBlock) {
       this.currentlyMinedBlock.abortMining();
     }
   }
 
-  async mineBlock(rewardAddress: string, blockchainPath: string) {
-    while (this.mining) {
+  async mineBlock() {
+    while (this.currentlyMining) {
       try {
         console.log(`%cStart mining...`, "color: #c6b0e8");
-        this.currentlyMinedBlock = this.blockchain.createNextBlock(rewardAddress);
+        this.currentlyMinedBlock = this.blockchain.createNextBlock(this.rewardAddress);
         const success = await this.currentlyMinedBlock.mine();
         if (!success) {
-          console.log("Mining aborted.", "color: #c6b0e8");
+          console.log("%cMining aborted.", "color: #c6b0e8");
           return;
         }
         console.log(
@@ -61,7 +70,6 @@ export class Node {
         );
         this.addBlock(this.currentlyMinedBlock);
         this.broadcastBlock(this.currentlyMinedBlock);
-        this.blockchain.saveBlockChain(blockchainPath);
       } catch (error) {
         console.error("Error during mining:", error);
       }
@@ -71,7 +79,9 @@ export class Node {
 
   addBlock(newBlock: Block) {
     this.blockchain.blocks.push(newBlock);
-    this.blockchain.saveBlockChain(this.localFilesPath);
+    this.blockchain.saveBlockChain(this.blockchainPath);
+
+    // TODO unspent/pending transaction updating
   }
 
   // Sends a test message to a target URL
@@ -311,11 +321,13 @@ export class Node {
         console.error(`❌ %cReceived invalid block.`, "color: green");
         return;
       }
+      this.stopMining();
       this.addBlock(receivedBlock);
       console.log(
         `🔳 %cReceived new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`,
         "color: green",
       );
+      this.startMining();
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
       if (receivedBlock.isValid()) {

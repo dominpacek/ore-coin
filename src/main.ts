@@ -19,13 +19,14 @@ if (import.meta.main) {
       Deno.exit(1);
     }
   }
+  
 
   console.log("%cWitaj w Górniczej Dolinie! ⛏", "color: blue");
 
   // TODO cleanup flags
   // add join flag, evil flag
   const flags = parseArgs(Deno.args, {
-    boolean: ["init", "wallet", "mine"],
+    boolean: ["init", "wallet", "lazy"],
     string: ["host", "port", "join"],
     collect: ["join"],
     default: {
@@ -173,26 +174,15 @@ if (import.meta.main) {
     Deno.exit(1);
   }
 
-  try {
-    Deno.mkdirSync(`./user-files/${port}`);
-  } catch (e) {
-    if (e instanceof Deno.errors.AlreadyExists) {
-      // pass
-    } else {
-      console.error(e);
-      Deno.exit(1);
-    }
-  }
   const blockchainPath = `./user-files/${port}/`;
 
-  node = new Node(host, port, blockchainPath);
+  node = new Node(host, port, blockchainPath, "043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858");
+  // TODO put the address using flag/reading user input or something.
+
   console.log(`Blockchain will be saved in ${blockchainPath}.`);
   flags.join.forEach((peer) => {
     node.addPeer(peer, true);
   });
-  // if (node.peers && node.peers.length > 0) {
-  //   node.sayHi(node.peers[node.peers.length - 1]);
-  // }
 
   if (flags.init) {
     // TODO dodać adres dla coinbase
@@ -206,11 +196,9 @@ if (import.meta.main) {
     );
   }
 
-  if (flags.mine) {
-    node.startMining(
-      "043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858",
-      blockchainPath,
-    );
+  if (!flags.lazy) {
+    node.setMiner(true);
+    node.startMining();
     // node.blockchain.saveBlockChain(blockchainPath);
   }
 

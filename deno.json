@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "node1": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5801 --init",
+    "node1": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5801 --init --mine",
     "node2": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5802 --join http://localhost:5801",
-    "node3": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5803 --join http://localhost:5802",
+    "node3": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --port 5803 --join http://localhost:5801 --mine",
     "wallet": "deno run --watch --allow-read=./user-files/ --allow-write=./user-files/ --allow-net src/main.ts --wallet"
   },
   "imports": {

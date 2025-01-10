@@ -26,7 +26,7 @@ if (import.meta.main) {
   // TODO cleanup flags
   // add join flag, evil flag
   const flags = parseArgs(Deno.args, {
-    boolean: ["init", "wallet"],
+    boolean: ["init", "wallet", "mine"],
     string: ["host", "port", "join"],
     collect: ["join"],
     default: {
@@ -206,7 +206,7 @@ if (import.meta.main) {
     );
   }
 
-  if (flags.init) {
+  if (flags.mine) {
     while (true) {
       node.mineBlock("043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858");
       await sleep(5);

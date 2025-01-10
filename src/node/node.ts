@@ -117,7 +117,7 @@ export class Node {
         const response = await fetch(req);
         const obj = await response.json();
         const receivedBlockchainLength = obj.blocks.length;
-        if (receivedBlockchainLength > longestBlockchainLength) {
+        if (receivedBlockchainLength > longestBlockchainLength) { // Choose the longest blockchain (tiebreaker: received first)
           const receivedBlockchain = Blockchain.fromJson(JSON.stringify(obj));
           if (!receivedBlockchain.isValid()) {
             continue; // Ignore invalid blockchains

@@ -17,6 +17,9 @@ export class Node {
   blockchain!: Blockchain;
   localFilesPath: string;
 
+  mining: boolean = false;
+  currentlyMinedBlock: Block | null = null;
+
   constructor(address: string, port: number, file_path: string) {
     this.address = address;
     this.port = port;
@@ -30,11 +33,40 @@ export class Node {
     return `http://${this.address}:${this.port}`;
   }
 
-  // Mines a block and sends it to peers
-  mineBlock(rewardAddress: string) {
-    const newBlock = this.blockchain.mineBlock(rewardAddress);
-    this.addBlock(newBlock);
-    this.broadcastBlock(newBlock);
+  startMining(rewardAddress: string, blockchainPath: string) {
+    this.mining = true;
+    this.mineBlock(rewardAddress, blockchainPath);
+  }
+
+  stopMining() {
+    this.mining = false;
+    if (this.currentlyMinedBlock) {
+      this.currentlyMinedBlock.abortMining();
+    }
+  }
+
+  async mineBlock(rewardAddress: string, blockchainPath: string) {
+    while (this.mining) {
+      try {
+        console.log(`%cStart mining...`, "color: #c6b0e8");
+        this.currentlyMinedBlock = this.blockchain.createNextBlock(rewardAddress);
+        const success = await this.currentlyMinedBlock.mine();
+        if (!success) {
+          console.log("Mining aborted.", "color: #c6b0e8");
+          return;
+        }
+        console.log(
+          `%cMining finished! Nonce: ${this.currentlyMinedBlock.nonce} Hash: ${this.currentlyMinedBlock.hash}`,
+          "color: #c6b0e8",
+        );
+        this.addBlock(this.currentlyMinedBlock);
+        this.broadcastBlock(this.currentlyMinedBlock);
+        this.blockchain.saveBlockChain(blockchainPath);
+      } catch (error) {
+        console.error("Error during mining:", error);
+      }
+    }
+    console.log("Mining stopped.");
   }
 
   addBlock(newBlock: Block) {
@@ -249,12 +281,11 @@ export class Node {
       }
       const req = await body.json();
       const peerAddress = req.address as string;
-
       if (!this.peers.includes(peerAddress)) {
         console.log(`📳 %cAdding new peer at ${peerAddress}.`, "color: green");
         this.addPeer(peerAddress);
       } else {
-        console.log(`📳 Already have peer ${peerAddress}.`);
+        console.log(`📳 %cAlready have peer ${peerAddress}.`, "color: green");
       }
     } catch (error) {
       this.logHandlerError("addPeer", error);

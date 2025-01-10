@@ -1,6 +1,7 @@
 import { Transaction } from "./transaction.ts";
 import { createHash } from "node:crypto";
 import { DIFFICULTY } from "../config.ts";
+import { setImmediate } from "node:timers/promises";
 
 class Block {
   index: number;
@@ -9,6 +10,7 @@ class Block {
   transactions: Transaction[];
   nonce: number;
   hash: string;
+  mining: boolean = false;
 
   constructor(
     timestamp: number,
@@ -36,15 +38,33 @@ class Block {
       .digest("hex");
   }
 
-  mine() {
-    console.log(`%cStart mining...`, "color: #c6b0e8");
 
-    // Keep mining the block until the hash matches the difficulty
-    while (!this.doesHashMatchDifficulty()) {
-      this.nonce++;
-      this.hash = this.toHash();
-    }
-    console.log(`%cMining finished! Nonce: ${this.nonce} Hash: ${this.hash}`, "color: #c6b0e8");
+  mine(): Promise<boolean> {
+    this.mining = true;
+    return new Promise((resolve) => {
+      const mineStep = () => {
+        if (!this.mining) {
+          resolve(false);
+          return;
+        }
+        for (let i = 0; i < 1000; i++) {  // Mine in batches to reduce the overhead of restarting promise
+          if (this.doesHashMatchDifficulty()) {
+            resolve(true);
+            return;
+          }
+          // if (this.nonce % 1000 == 0 ) console.log(this.nonce); // Debugging purposes
+
+          this.nonce++;
+          this.hash = this.toHash();
+        }
+        setImmediate(mineStep); // Continue mining without blocking the event loop
+      };
+      mineStep();
+    });
+  }
+
+  abortMining(): void {
+    this.mining = false;
   }
 
   static fromJson(block: any) {
@@ -67,7 +87,7 @@ class Block {
       return false;
     }
     if (!this.doesHashMatchDifficulty()) {
-      if (verbose) console.log("Hash does not match difficulty.");
+      if (verbose) console.log(`Hash does not match difficulty. Hash: ${this.hash}, Difficulty: ${DIFFICULTY}`);
       return false;
     }
     if (!this.isTimestampValid()) {

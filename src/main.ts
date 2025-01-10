@@ -2,9 +2,8 @@ import { parseArgs } from "jsr:@std/cli/parse-args";
 import { exit } from "node:process";
 import { Blockchain } from "./blockchain/blockchain.ts";
 import { BlockchainMessage } from "./node/blockchainMessage.ts";
-import { Wallet } from "./wallet/wallet.ts";
 import { Node } from "./node/node.ts";
-import { sleep } from "https://deno.land/x/sleep/mod.ts";
+import { Wallet } from "./wallet/wallet.ts";
 
 let node: Node;
 // Entry point of the program
@@ -208,11 +207,11 @@ if (import.meta.main) {
   }
 
   if (flags.mine) {
-    while (true) {
-      node.mineBlock("043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858");
-      await sleep(5);
-      node.blockchain.saveBlockChain(blockchainPath);
-    }
+    node.startMining(
+      "043252ac6149f3373bfe1f787b0b886919a7e9a038b53fc55c699d19993f4cfff23f405079e2261adea04742355315f85745cdf9466c7813f86d7c6740aca8e858",
+      blockchainPath,
+    );
+    // node.blockchain.saveBlockChain(blockchainPath);
   }
 
   //console.log(`%cEnter message or "exit" to quit.`, "color: gray");

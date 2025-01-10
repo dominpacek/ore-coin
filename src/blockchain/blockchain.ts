@@ -20,7 +20,7 @@ class Blockchain {
     return this.blocks[this.blocks.length - 1];
   }
 
-  mineBlock(rewardAddress: string): Block {
+  createNextBlock(rewardAddress: string): Block {
     let transactions = this.pendingTransactions;
     this.pendingTransactions = [];
     const coinbase = Transaction.newCoinbaseTx(rewardAddress, MINING_REWARD);
@@ -33,7 +33,6 @@ class Blockchain {
       this.getLatestBlock().hash,
       this.getLatestBlock().index + 1,
     );
-    newBlock.mine();
     return newBlock;
   }
 

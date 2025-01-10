@@ -37,15 +37,14 @@ class Block {
   }
 
   mine() {
-    console.log("Start mining...");
+    console.log(`%cStart mining...`, "color: #c6b0e8");
+
     // Keep mining the block until the hash matches the difficulty
     while (!this.doesHashMatchDifficulty()) {
       this.nonce++;
       this.hash = this.toHash();
     }
-    console.log(
-      "Mining finished! Nonce: " + this.nonce + " Hash: " + this.hash,
-    );
+    console.log(`%cMining finished! Nonce: ${this.nonce} Hash: ${this.hash}`, "color: #c6b0e8");
   }
 
   static fromJson(block: any) {

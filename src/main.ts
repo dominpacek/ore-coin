@@ -187,6 +187,7 @@ if (import.meta.main) {
   const blockchainPath = `./user-files/${port}/`;
 
   node = new Node(host, port, blockchainPath);
+  console.log(`Blockchain will be saved in ${blockchainPath}.`);
   flags.join.forEach((peer) => {
     node.addPeer(peer, true);
   });

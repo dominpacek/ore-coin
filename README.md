@@ -47,6 +47,11 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 
 ### 5. Sprawozdanie końcowe (termin oddania: 24.01.2025)
 
+Program wypisuje wiadomości log na konsoli pokolorowane w następujący sposób:
+- zielone - wiadomości przychodzące
+- żółte - wiadomości wychodzące
+- fioletowe - kopanie
+
 ## Node
 
 Węzeł sieci. Udostępnia serwer HTTP z endpointami:

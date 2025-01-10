@@ -58,7 +58,7 @@ export class Node {
     this.knownMessages.push(message.token);
     if (debug_write_messages) {
       console.log(
-        `📡 Broadcasting message ${message.token} to ${this.peers.length} peers.`,
+        `📡 %cBroadcasting message ${message.token} to ${this.peers.length} peers.`, "color: orange",
       );
     }
     await Promise.all(this.peers.map(async (peer) => {
@@ -133,7 +133,7 @@ export class Node {
     if (longestBlockchain) {
       this.blockchain = longestBlockchain;
       console.log(
-        `Fetched blockchain ${this.blockchain.blocks.length}bl long.`,
+        `%cFetched blockchain ${this.blockchain.blocks.length}bl long.`, "color: green",
       );
     } else {
       console.log(
@@ -160,7 +160,7 @@ export class Node {
 
   public broadcastBlock(block: Block) {
     const message = new BlockchainMessage(JSON.stringify(block));
-    console.log(`📡: Broadcasting mined block (id=${block.index}).`);
+    console.log(`📡: %cBroadcasting mined block (id=${block.index}).`, "color: orange");
     this.knownMessages.push(message.token);
     this.broadcast(message, "/blockchain/add_block");
   }
@@ -224,7 +224,7 @@ export class Node {
         callbackRequestHandler(mess.content);
       }
     } catch (error) {
-      this.logError(callbackRequestHandler.name, error);
+      this.logHandlerError(callbackRequestHandler.name, error);
       context.response.status = 500;
       context.response.body = { message: "Internal Server Error" };
     }
@@ -242,13 +242,13 @@ export class Node {
       const peerAddress = req.address as string;
 
       if (!this.peers.includes(peerAddress)) {
-        console.log(`📳 %cAdding new peer at ${peerAddress}.`, "color: orange");
+        console.log(`📳 %cAdding new peer at ${peerAddress}.`, "color: green");
         this.addPeer(peerAddress);
       } else {
         console.log(`📳 Already have peer ${peerAddress}.`);
       }
     } catch (error) {
-      this.logError("addPeer", error);
+      this.logHandlerError("addPeer", error);
       context.response.status = 500;
       context.response.body = { message: "Internal Server Error" };
     }
@@ -268,22 +268,22 @@ export class Node {
       if (
         !this.blockchain.isNewBlockValid(receivedBlock, true)
       ) {
-        console.error(`❌ Received invalid block.`);
+        console.error(`❌ %cReceived invalid block.`, "color: green");
         return;
       }
       this.addBlock(receivedBlock);
       console.log(
-        `🔳 Received new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`,
+        `🔳 %cReceived new valid block (id=${receivedBlock.index}). Blockchain now ${this.blockchain.blocks.length}bl long.`, "color: green"
       );
     } else if (latestIndex + 1 < receivedBlock.index) {
       // We are missing blocks, ask peers for full blockchain
       if (receivedBlock.isValid()) {
         console.log(
-          `⬛ Received new 'orphan' block, requesting full blockchain.`,
+          `⬛ %cReceived new 'orphan' block, requesting full blockchain.`, "color: green",
         );
         this.askForBlockchain();
       } else {
-        console.error(`❌ Received invalid 'orphan' block.`);
+        console.error(`❌ %cReceived invalid 'orphan' block.`, "color: green");
       }
     }
   };
@@ -304,7 +304,7 @@ export class Node {
       context.response.status = 200;
       context.response.body = { balance: balance };
     } catch (error) {
-      this.logError("getBalance", error);
+      this.logHandlerError("getBalance", error);
       context.response.status = 500;
       context.response.body = { message: "Internal Server Error" };
     }
@@ -320,7 +320,7 @@ export class Node {
     }
   };
 
-  private logError(requestName: string, error: unknown) {
+  private logHandlerError(requestName: string, error: unknown) {
     console.error(
       `%cError%c handling %c${requestName}%c request: ${error}`,
       "color:red",

@@ -45,7 +45,7 @@ class Blockchain {
   saveBlockChain(path: string): void {
     // Save the whole object to a file
     Deno.writeTextFileSync(path + "blockchain.json", JSON.stringify(this));
-    console.log("Blockchain saved to " + path + "blockchain.json");
+    // console.log("Blockchain saved to " + path + "blockchain.json");
   }
 
   static fromJson(json: string): Blockchain {

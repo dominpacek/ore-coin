@@ -78,8 +78,8 @@ export class Node {
   }
 
   addBlock(newBlock: Block) {
-    this.blockchain.blocks.push(newBlock);
-    this.blockchain.saveBlockChain(this.blockchainPath);
+    this.blockchain.addBlock(newBlock);
+    this.blockchain.saveBlockchain(this.blockchainPath);
 
     // TODO unspent/pending transaction updating
   }

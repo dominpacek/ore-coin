@@ -3,7 +3,6 @@ import { Blockchain } from "./blockchain/blockchain.ts";
 import { Node } from "./node/node.ts";
 
 if (import.meta.main) {
-  // TODO cleanup flags
   // add evil flag
   const flags = parseArgs(Deno.args, {
     boolean: ["load", "lazy"],

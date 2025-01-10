@@ -22,7 +22,7 @@ class Blockchain {
 
   createNextBlock(rewardAddress: string): Block {
     let transactions = this.pendingTransactions;
-    this.pendingTransactions = [];
+    // this.pendingTransactions = [];
     const coinbase = Transaction.newCoinbaseTx(rewardAddress, MINING_REWARD);
     this.unspentTransactions.push(coinbase);
     transactions = [coinbase, ...transactions];
@@ -36,12 +36,16 @@ class Blockchain {
     return newBlock;
   }
 
+  addBlock (newBlock: Block) {
+    this.blocks.push(newBlock);
+    // TODO tutaj usuwanie zrobionych transakcji z pending transactions
+  }
+
   addTransaction(transaction: Transaction) {
     this.pendingTransactions.push(transaction);
   }
 
-
-  saveBlockChain(path: string): void {
+  saveBlockchain(path: string): void {
     // Save the whole object to a file
     Deno.writeTextFileSync(path + "blockchain.json", JSON.stringify(this));
     // console.log("Blockchain saved to " + path + "blockchain.json");
@@ -51,7 +55,9 @@ class Blockchain {
     // Load blockchain from a json string
     const obj = JSON.parse(json);
     const blockchain = new Blockchain();
-    blockchain.blocks = obj.blocks.map((block: object) => Block.fromJson(block));
+    blockchain.blocks = obj.blocks.map((block: object) =>
+      Block.fromJson(block)
+    );
     blockchain.pendingTransactions = obj.pendingTransactions.map((tx: object) =>
       Transaction.fromJson(JSON.stringify(tx))
     );
@@ -145,7 +151,9 @@ class Blockchain {
     );
     if (rewardTransactions.length !== 1) {
       if (verbose) {
-        console.log(`Invalid number of reward transactions: ${rewardTransactions.length} should be 1.`);
+        console.log(
+          `Invalid number of reward transactions: ${rewardTransactions.length} should be 1.`,
+        );
       }
       return false;
     }

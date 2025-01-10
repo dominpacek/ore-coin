@@ -71,7 +71,7 @@ if (import.meta.main) {
         } else if (choice == "2") {
             wallet.addPrivateKey();
         } else if (choice == "3") {
-            // TODO ask for peer port
+            // TODO prompt for peer port
             const blockchain = await Node.askForBlockchainFromPeer(
                 "http://localhost:5801",
             );

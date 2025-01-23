@@ -7,6 +7,8 @@ import {
 } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import elliptic from "npm:elliptic";
+import { Transaction, TxIn, TxOut } from "../blockchain/transaction.ts";
+import type { Blockchain } from "../blockchain/blockchain.ts";
 
 const EC = new elliptic.ec("secp256k1");
 
@@ -30,7 +32,7 @@ class Wallet {
     return privateKey;
   }
 
-  getPublicKey(private_key: string) {
+  static getPublicKey(private_key: string) {
     const key = EC.keyFromPrivate(private_key, "hex");
     return key.getPublic().encode("hex");
   }
@@ -57,6 +59,58 @@ class Wallet {
     wallet.keys = readWallet(filePath, password);
     wallet.fileLocation = filePath;
     return wallet;
+  }
+
+  createTransaction(
+    toAddress: string,
+    fromKey: string,
+    amount: number,
+    blockchain: Blockchain,
+  ): Transaction {
+    if (!this.keys.includes(fromKey)) {
+      throw new Error("Key not found in your wallet: " + fromKey);
+    }
+    if (amount > blockchain.getBalance(Wallet.getPublicKey(fromKey))) {
+      throw new Error(
+        "Insufficient funds: " +
+          blockchain.getBalance(Wallet.getPublicKey(fromKey)),
+      );
+    }
+
+    const fromAddress = Wallet.getPublicKey(fromKey);
+
+    const txIns: TxIn[] = [];
+    const txOuts: TxOut[] = [new TxOut(toAddress, amount)];
+    const unspentTransactions = blockchain.getUnspentTransactionsForAddress(
+      fromAddress,
+    );
+
+    let currentAmount = 0;
+    let change = 0;
+    let i = 0;
+
+    while (currentAmount < amount) {
+      const tx = unspentTransactions[i++];
+      tx.outputs.forEach((output, index) => {
+        if (output.address === fromAddress) {
+          const newTxIn = new TxIn(tx.id, index, output.amount, output.address);
+          newTxIn.signInput(EC.keyFromPrivate(fromKey, "hex"));
+          txIns.push(newTxIn);
+          currentAmount += output.amount;
+        }
+      });
+    }
+
+    change = currentAmount - amount;
+
+    if (change > 0) {
+      txOuts.push(new TxOut(fromAddress, change));
+    }
+
+    const transaction = new Transaction(txIns, txOuts);
+    transaction.hash = transaction.calculateHash();
+
+    return transaction;
   }
 }
 

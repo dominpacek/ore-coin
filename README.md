@@ -32,19 +32,32 @@ Projekt na kurs 1DI2245 - Kryptografia stosowana.
 
 ### 3. Transakcje przekazania środków (termin oddania: 13.12.2024)
 
-- [ ] Tworzenie transakcji w formacie json (lista w bloku)
-- [ ] Walidacja transakcji pod kątem double-spending
-- [ ] Obliczanie aktualnych sald na kontach
+- [ x ] Tworzenie transakcji w formacie json (lista w bloku)
+- [ x ] Walidacja transakcji pod kątem double-spending
+- [ x ] Obliczanie aktualnych sald na kontach
+- [ x ] Osiągnięcie konsensusu (metoda proof-of-work)
 
 ### 4. Kopanie asynchroniczne (termin oddania: 10.01.2025)
 
-- [ ] Obsługa orphan block
-  - sytuacja, kiedy dostajemy nowy blok ale nie dostaliśmy jeszcze jego rodzica (dopytać się pozostałych node "hej, pokaż cały blockchain bo ja nie mam przodka tego bloku")
-- [ ] Obsługa forków
-  - sytuacja, kiedy dwa node wykopią blok w mniej więcej tym samym czasie
-- [ ] Tworzenie forków przez złośliwego node
+- [ x ] Obsługa orphan block
+- [ x ] Obsługa forków
+- [ x ] Tworzenie forków przez złośliwego node
 
 ### 5. Sprawozdanie końcowe (termin oddania: 24.01.2025)
+
+Program wypisuje wiadomości log na konsoli pokolorowane w następujący sposób:
+- zielone - wiadomości przychodzące
+- żółte - wiadomości wychodzące
+- fioletowe - kopanie
+
+Flagi main.ts:
+- `host` - adres hosta
+- `port` / `p` - port na jakim ma działać node
+- `join [http://HOST:PORT]` - adres peera do jakiego node ma się połączyć (można podać wiele) 
+- `lazy` - node nie będzie kopał
+- `load` - wczytaj blockchain z pliku
+
+Pliki przechowywane są w folderze `./user-files/[PORT]` - oddzielnie dla każdego node.
 
 ## Node
 

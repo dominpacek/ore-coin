@@ -1,9 +1,9 @@
-import { ec } from "elliptic";
+import elliptic from "npm:elliptic";
 
-const EC = new ec("secp256k1");
+const EC = new elliptic.ec("secp256k1");
 
 const getPublicKey = (aPrivateKey: string): string => {
-  return ec.keyFromPrivate(aPrivateKey, "hex").getPublic().encode("hex");
+  return EC.keyFromPrivate(aPrivateKey, "hex").getPublic().encode("hex");
 };
 
 const generatePrivateKey = (): string => {
@@ -12,4 +12,10 @@ const generatePrivateKey = (): string => {
   return privateKey.toString(16);
 };
 
-export { generatePrivateKey, getPublicKey };
+const verifySignature = (publicKey:string, signature:string, messageHash:string): boolean => {
+  const key = EC.keyFromPublic(publicKey, 'hex');
+  const verified = key.verify(messageHash, signature);
+  return verified;
+}
+
+export { generatePrivateKey, getPublicKey, verifySignature };

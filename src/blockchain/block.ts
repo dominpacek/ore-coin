@@ -1,5 +1,7 @@
 import { Transaction } from "./transaction.ts";
 import { createHash } from "node:crypto";
+import { DIFFICULTY } from "../config.ts";
+import { setImmediate } from "node:timers/promises";
 
 class Block {
   index: number;
@@ -8,6 +10,7 @@ class Block {
   transactions: Transaction[];
   nonce: number;
   hash: string;
+  mining: boolean = false;
 
   constructor(
     timestamp: number,
@@ -35,46 +38,63 @@ class Block {
       .digest("hex");
   }
 
-  mine(difficulty: number) {
-    console.log("Start mining...");
-    // Keep mining the block until the hash matches the difficulty
-    while (!this.doesHashMatchDifficulty(difficulty)) {
-      this.nonce++;
-      this.hash = this.toHash();
-    }
-    console.log(
-      "Mining finished! Nonce: " + this.nonce + " Hash: " + this.hash,
-    );
+
+  mine(): Promise<boolean> {
+    this.mining = true;
+    return new Promise((resolve) => {
+      const mineStep = () => {
+        if (!this.mining) {
+          resolve(false);
+          return;
+        }
+        for (let i = 0; i < 1000; i++) {  // Mine in batches to reduce the overhead of restarting promise
+          if (this.doesHashMatchDifficulty()) {
+            resolve(true);
+            return;
+          }
+          // if (this.nonce % 1000 == 0 ) console.log(this.nonce); // Debugging purposes
+
+          this.nonce++;
+          this.hash = this.toHash();
+        }
+        setImmediate(mineStep); // Continue mining without blocking the event loop
+      };
+      mineStep();
+    });
+  }
+
+  abortMining(): void {
+    this.mining = false;
   }
 
   static fromJson(block: any) {
-    // const transactions = block.transactions.map((transaction: any) =>
-    //     Transaction.fromJson(transaction)
-    // );
+    const transactions = block.transactions.map((transaction: object) =>
+        Transaction.fromJson(JSON.stringify(transaction))
+    );
     return new Block(
       block.timestamp,
-      [],
+      transactions,
       block.previousHash,
       block.index,
       block.nonce,
     );
   }
 
-  isValidAlone(difficulty: number): boolean {
-    // Validation method for the block by itself (disregarding the previous block)
-    return this.isHashValid() &&
-      this.doesHashMatchDifficulty(difficulty) &&
-      this.isTimestampValid();
-  }
-
-  isValid(previousBlock: Block, difficulty: number): boolean {
-    // Complete validation method for the block considering the previous block
-    return this.isHashValid() &&
-      this.doesHashMatchDifficulty(difficulty) &&
-      this.isTimestampValid() &&
-      this.previousHash === previousBlock.hash &&
-      this.index === previousBlock.index + 1 &&
-      this.timestamp > previousBlock.timestamp;
+  isValid(verbose: boolean = false): boolean {
+    // Basic validation method for the block
+    if (!this.isHashValid()) {
+      if (verbose) console.log("Invalid hash.");
+      return false;
+    }
+    if (!this.doesHashMatchDifficulty()) {
+      if (verbose) console.log(`Hash does not match difficulty. Hash: ${this.hash}, Difficulty: ${DIFFICULTY}`);
+      return false;
+    }
+    if (!this.isTimestampValid()) {
+      if (verbose) console.log("Invalid timestamp.");
+      return false;
+    }
+    return true;
   }
 
   private isHashValid(): boolean {
@@ -82,11 +102,11 @@ class Block {
     return this.hash === this.toHash();
   }
 
-  private doesHashMatchDifficulty(difficulty: number): boolean {
+  private doesHashMatchDifficulty(): boolean {
     // Check if the hash of the block fulfills the difficulty requirement
-    if (this.index === 0) return true; // Genesis block doesn't need to match this
+    if (this.index === 0) return true; // Genesis block doesn't need to fulfill difficulty
 
-    return this.hash.startsWith(new Array(difficulty).fill(0).join(""));
+    return this.hash.startsWith(new Array(DIFFICULTY).fill(0).join(""));
   }
 
   private isTimestampValid(): boolean {
